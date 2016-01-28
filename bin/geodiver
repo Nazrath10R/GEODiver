@@ -42,7 +42,8 @@ BANNER
        argument: true
 
     on 'p', 'port=',
-       'Port to run GeoDiver on',
+       'Port to run GeoDiver on (remember to update the port in Google' \
+       ' Developer API, if necessary as well)',
        argument: true
 
     on 's', 'set',

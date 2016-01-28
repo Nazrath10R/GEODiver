@@ -71,7 +71,7 @@ geodiver
 
 Geodiver will automatically guide you through an interactive setup process to help set up your installation.
 
-That's it! Open http://localhost:4567/ and start using GeoDiver!
+That's it! Open http://localhost:9292/ and start using GeoDiver!
 
 
 
@@ -102,7 +102,7 @@ Examples:
     -g, --gd_public_dir      The public directory that is served to the web application.
     -n, --num_threads        Number of threads to use to run a BLAST search
     -H, --host               Host to run GeoDiver on
-    -p, --port               Port to run GeoDiver on
+    -p, --port               Port to run GeoDiver on (remember to update the port in Google Developer API as well)
     -s, --set                Set configuration value in default or given config file
     -D, --devel              Start GeoDiver in development mode
     -v, --version            Print version number of GeoDiver that will be loaded
