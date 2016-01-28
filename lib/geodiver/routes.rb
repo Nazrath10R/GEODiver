@@ -8,10 +8,11 @@ require 'geodiver/r_core'
 require 'geodiver/version'
 
 module GeoDiver
-  # The Sinatra Routes
+  # The Sinatra Routes - i.e. The Controller
   class Routes < Sinatra::Base
     register Sinatra::CrossOrigin
-
+    # See
+    # http://www.sinatrarb.com/configuration.html
     configure do
       # We don't need Rack::MethodOverride. Let's avoid the overhead.
       disable :method_override
@@ -31,7 +32,9 @@ module GeoDiver
 
       # We don't want Sinatra do setup any loggers for us. We will use our own.
       set :logging, nil
+    end
 
+    configure do
       # Uer Rack::Session::Pool over Sinatra default sessions as the Pool saves
       # the session info as a instance variable (as compared to within a
       # cookie). Therefore, Rack::Session::Pool should be faster.
@@ -41,8 +44,10 @@ module GeoDiver
       use OmniAuth::Builder do
         provider :google_oauth2, ENV['GOOGLE_KEY'], ENV['GOOGLE_SECRET'], {}
       end
+    end
 
-      # This is the app root...
+    configure do
+      # views directory will be found here.
       set :root, -> { GeoDiver.root }
 
       # This is the full path to the public folder...
