@@ -1,0 +1,191 @@
+
+img.materialboxed.initialized.active {
+  background-color: #fff;
+}
+
+nav ul a,
+nav .brand-logo {
+  color: #444;
+}
+
+.nav_centered {
+  width: 300px !important;
+  margin: 0 auto;
+  background-color:transparent !important;
+  height: 64px;
+}
+
+.nav_centered li {
+  line-height: 64px !important;
+  height: 64px !important;
+}
+
+.collapsible-body p{
+  padding: 0;
+}
+
+#search_geo{
+  padding-left: 20px;
+  padding-right: 50px;
+}
+
+p {
+  line-height: 2rem;
+}
+
+.button-collapse {
+  color: #26a69a;
+}
+
+.parallax-container {
+  min-height: 380px;
+  line-height: 0;
+  height: auto;
+  color: rgba(255,255,255,.9);
+}
+  .parallax-container .section {
+    width: 100%;
+  }
+
+@media only screen and (max-width : 992px) {
+  .parallax-container .section {
+    position: absolute;
+    top: 40%;
+  }
+  #index-banner .section {
+    top: 10%;
+  }
+}
+
+@media only screen and (max-width : 600px) {
+  #index-banner .section {
+    top: 0;
+  }
+}
+
+.icon-block {
+  padding: 0 15px;
+}
+.icon-block .material-icons {
+  font-size: inherit;
+}
+
+footer.page-footer {
+  margin: 0;
+}
+
+
+
+
+.app {
+background-color:#b5b5b5;
+}
+
+/*Logo*/
+.logo {
+  margin-left:20px;
+}
+
+.analyse_card {
+  margin-top:30px;
+}
+
+.card .card-content .card-title{
+  font-size: 2rem;
+  padding-top:20px;
+  padding-left:10px;
+}
+
+#search_geo_dataset {
+  margin-bottom:25px;
+}
+
+#geo_db_summary {
+  padding-top:20px;
+}
+
+.heading1 {
+  font-size: 1.5rem;
+  font-weight: 300;
+}
+
+.heading2 {
+  font-size: 1.2rem;
+}
+
+.materialboxed_center {
+  margin: 0 auto; 
+  width:75%;
+}
+
+.adv_param_collapsible{
+  box-shadow: none;
+  border: none; 
+  margin-top:30px;
+  margin-bottom:-60px;
+}
+
+#adv_params_btn {
+  border-bottom:none;
+}
+
+.adv_param_collapsible-body{
+  border-bottom-style: none; padding: 1em 0px;
+}
+
+
+#search_geo {
+  margin-bottom:20px;
+}
+
+#results_section{
+  margin-top:30px;
+}
+
+.dataset_info_title {
+font-weight:300; font-size:1.25rem;
+}
+
+
+.dataset_info_header {
+font-weight:500;
+}
+
+
+.nav_centered .indicator {
+  background-color: #fff;
+  height:3.5px;
+}
+
+.multiple-select-dropdown {
+  position: initial !important;
+}
+
+.dropdown-content {
+  background-color: #FFFFFF;
+  margin: 0;
+  display: none;
+  min-width: 170px; /* Changed this to accomodate content width */
+  max-height: auto;
+  margin-left: -1px; /* Add this to keep dropdown in line with edge of navbar */
+  overflow: hidden; /* Changed this from overflow-y:auto; to overflow:hidden; */
+  opacity: 0;
+  position: absolute;
+  white-space: nowrap;
+  z-index: 1;
+  will-change: width, height;
+}
+.collection .collection-item.avatar {
+    min-height: 62px;
+}
+
+.collection .collection-item.avatar .title {
+  line-height: 42px;
+  font-size: 17px;
+  padding: 0;
+}
+.profile_img{
+  height: 45px;
+  margin-top: 10px !important;
+  margin-bottom: 10px !important;
+}

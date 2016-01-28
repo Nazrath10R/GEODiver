@@ -1,0 +1,61 @@
+doctype html
+html lang="en" 
+  head
+    meta content=("text/html; charset=UTF-8") http-equiv="Content-Type"
+    meta content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no" name="viewport"
+    title GeoDiver
+    /! CSS
+    link href="#{uri('assets/css/materialize.min.css')}" media="screen,projection" rel="stylesheet" type="text/css" /
+    link href="#{uri('assets/css/style.css')}" media="screen,projection" rel="stylesheet" type="text/css" /
+  body.app
+    nav.blue.darken-4
+      .nav-wrapper
+        .row
+          .col.s2
+            span.hide-on-med-and-down.logo
+              img height="64" src="#{uri('assets/img/logo.svg')}" alt="GeoDiver Logo"
+            a#logo-container.brand-logo.white-text href="#{uri('..')}"
+              | &nbsp;GeoDiver
+          .col.s8
+            ul.nav_centered.tabs.hide-on-med-and-down
+              li.tab
+                a.white-text href="/analyse"  Analyse
+              li.tab
+                a.white-text href="/history"  History
+          .col.s2
+            ul.right.hide-on-med-and-down
+              li
+                a.white-text.dropdown-button href="#!" data-activates="dropdown" data-beloworigin="true"
+                  .row
+                    .col.s8
+                      span.right
+                        | #{session[:user].info['first_name']}
+                    .col.s4                  
+                        img.circle.profile_img.left alt="Profile Picture" src="#{session[:user].info['image']}" /
+        ul#nav-mobile.side-nav
+          li
+            a href="profile"  Login
+        a.button-collapse data-activates="nav-mobile" href="#" 
+          i.material-icons menu
+    == yield
+    #loading_modal.modal
+      .modal-content
+        h4#model_header_text
+        p#model_text
+        .progress
+          .indeterminate.light-blue.accent-2
+    /! Dropdown Structure
+    ul#dropdown.dropdown-content.collection style="z-index:5;"
+      li.collection-item.avatar
+        i.material-icons.circle.light-blue.accent-3  live_help
+        span.title FAQs
+      li.collection-item.avatar
+        i.material-icons.circle.light-blue.accent-3  feedback
+        span.title Feedback
+      li.collection-item.avatar onclick="location.href='/logout';" style="cursor: pointer;"
+        i.material-icons.circle.light-blue.accent-3  power_settings_new
+        span.title Log Out
+    script src="https://code.jquery.com/jquery-2.1.1.min.js" 
+    script src="#{uri('assets/js/materialize.min.js')}"
+    script src="https://cdn.plot.ly/plotly-latest.min.js" 
+    script src="#{uri('assets/js/geodiver.min.js')}" 

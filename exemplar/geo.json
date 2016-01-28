@@ -1,0 +1,10 @@
+{   "Accession": "GDS5093",
+    "Title": "Acute Dengue patients: whole blood",
+    "Description": "Analysis of blood from patients with acute Dengue virus (DENV) infection and during convalescence. Dengue is a mosquito-borne infectious disease and Dengue Hemorrhagic Fever is a life-threatening illness. Results provide insight into molecular mechanisms underlying host response to DENV infection.",
+    "Sample_Organism": "Homo sapiens",
+    "Factors": {
+        "infection": ["control", "Dengue virus"],
+        "disease.state": ["Convalescent", "Dengue Fever", "Dengue Hemorrhagic Fever", "healthy control"]
+    },
+    "Reference": "Nucleic Acids Res. 2005 Jan 1;33 Database Issue:D562-6"
+}

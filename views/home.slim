@@ -1,0 +1,117 @@
+doctype html
+html lang="en" 
+  head
+    meta content=("text/html; charset=UTF-8") http-equiv="Content-Type" /
+    meta content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no" name="viewport" /
+    title GeoDiver
+    /! CSS
+    link href="#{uri('assets/css/materialize.min.css')}" media="screen,projection" rel="stylesheet" type="text/css" /
+    link href="#{uri('assets/css/style.css')}" media="screen,projection" rel="stylesheet" type="text/css" /
+  body
+    nav.white role="navigation" 
+      .nav-wrapper.container
+        a#logo-container.brand-logo href="#"  GeoDiver
+        ul.right.hide-on-med-and-down
+          li
+            a href="/auth/google_oauth2" 
+              i.material-icons.right> perm_identity
+              | Login
+        ul#nav-mobile.side-nav
+          li
+            a href="/auth/google_oauth2"  Login
+        a.button-collapse data-activates="nav-mobile" href="#" 
+          i.material-icons menu
+    #index-banner.parallax-container
+      .section.no-pad-bot
+        .container
+          br/
+          br/
+          h1.header.center.teal-text.text-lighten-2 GeoDiver
+          .row.center
+            h5.header.col.s12.light A easy to use web tool for analysing GEO datasets.
+          .row.center
+            a#download-button.btn-large.waves-effect.waves-light.teal.lighten-1 href="analyse"  Dive In
+          br/
+          br/
+      .parallax
+        img alt=("Unsplashed background img 1") src="#{uri('assets/img/background1.jpg')}" /
+    .container
+      .section
+        /! Icon Section
+        .row
+          .col.s12.m4
+            .icon-block
+              h2.center.brown-text
+                i.material-icons flash_on
+              h5.center Speeds up Research
+              p.light We did most of the heavy lifting for you to provide an easy to use web tool that simply require two clicks to analyse Gene Expression Omnibus (GEO) databases.
+          .col.s12.m4
+            .icon-block
+              h2.center.brown-text
+                i.material-icons group
+              h5.center User Experience Focused
+              p.light Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam pellentesque tristique arcu, non consequat magna fermentum ac. Cras ut ultricies eros.
+          .col.s12.m4
+            .icon-block
+              h2.center.brown-text
+                i.material-icons settings
+              h5.center Easy to work with
+              p.light Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam pellentesque tristique arcu, non consequat magna fermentum ac. Cras ut ultricies eros.
+    .parallax-container.valign-wrapper
+      .section.no-pad-bot
+        .container
+          .row.center
+            h5.header.col.s12.light Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+      .parallax
+        img alt=("Unsplashed background img 2") src="#{uri('assets/img/background2.jpg')}" /
+    .container
+      .section
+        .row
+          .col.s12.center
+            h3
+              i.mdi-content-send.brown-text
+            h4 Contact Us
+            p.left-align.light Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam scelerisque id nunc nec volutpat. Etiam pellentesque tristique arcu, non consequat magna fermentum ac. Cras ut ultricies eros. Maecenas eros justo, ullamcorper a sapien id, viverra ultrices eros. Morbi sem neque, posuere et pretium eget, bibendum sollicitudin lacus. Aliquam eleifend sollicitudin diam, eu mattis nisl maximus sed. Nulla imperdiet semper molestie. Morbi massa odio, condimentum sed ipsum ac, gravida ultrices erat. Nullam eget dignissim mauris, non tristique erat. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae;
+    .parallax-container.valign-wrapper
+      .section.no-pad-bot
+        .container
+          .row.center
+            h5.header.col.s12.light Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+      .parallax
+        img alt=("Unsplashed background img 3") src="#{uri('assets/img/background3.jpg')}" /
+    footer.page-footer.teal
+      .container
+        .row
+          .col.l6.s12
+            h5.white-text About Us
+            p.grey-text.text-lighten-4 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam scelerisque id nunc nec volutpat. Etiam pellentesque tristique arcu, non consequat magna fermentum ac.
+          .col.l3.s12
+            h5.white-text Settings
+            ul
+              li
+                a.white-text href="#!"  Link 1
+              li
+                a.white-text href="#!"  Link 2
+              li
+                a.white-text href="#!"  Link 3
+              li
+                a.white-text href="#!"  Link 4
+          .col.l3.s12
+            h5.white-text Connect
+            ul
+              li
+                a.white-text href="#!"  Link 1
+              li
+                a.white-text href="#!"  Link 2
+              li
+                a.white-text href="#!"  Link 3
+              li
+                a.white-text href="#!"  Link 4
+      .footer-copyright
+        .container
+          | &copy; 2016 - 
+          a.brown-text.text-lighten-3 href="#!"  IsmailM, Nazrath, Suresh, Anisa & Marian
+    /! Scripts
+    script src="https://code.jquery.com/jquery-2.1.1.min.js" 
+    script src="#{uri('assets/js/materialize.min.js')}" 
+    script src="#{uri('assets/js/geodiver.min.js')}" 

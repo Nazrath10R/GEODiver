@@ -1,0 +1,40 @@
+.card
+  .card-content
+    span.card-title.light-blue-text.text-darken-3 Results
+    .row
+      .col.s12
+        ul#results_tabs.tabs
+          li.tab.col.s6
+            a#DGEA_tab.light-blue-text.text-darken-3.heading2 href="#DGEA"  Differential Gene Expression Analysis
+          li.tab.col.s6
+            a.light-blue-text.text-darken-3.heading2 href="#GSEA"  Gene Set Enrichment Analysis
+          .indicator.blue style="z-index:1"
+      #DGEA.col.s12 data-results-json="#{uri(File.join(@results_link, 'data.json'))}"
+        p.section
+          span.light-blue-text.text-darken-3.heading1 Principal Component Analysis
+        #PCA_plot style=("width: 100%; height: 600px;")
+          /! Plotly chart will be drawn inside this DIV
+        p.section
+          span.light-blue-text.text-darken-3.heading1 Top Genes Table
+        p.section
+          span.light-blue-text.text-darken-3.heading1 Heatmap
+          br
+        .materialboxed_center
+          img.materialboxed src="#{uri(File.join(@results_link, 'heatmap.png'))}" width="100%"
+        p.section
+          span.light-blue-text.text-darken-3.heading1 Volcano Plot
+          br
+        .materialboxed_center
+          img.materialboxed src="#{uri(File.join(@results_link, 'volcano.png'))}" width="100%"
+        p.section
+          span.light-blue-text.text-darken-3.heading1 Volcano Plots
+          br
+        #volcano_plot style=("width: 100%; height: 600px;") 
+          /! Plotly chart will be drawn inside this DIV
+      #GSEA.col.s12
+        p.section
+          span.light-blue-text.text-darken-3.heading1 Top Genes Table
+        p.section
+          span.light-blue-text.text-darken-3.heading1 Interaction Plots
+        p.section
+          span.light-blue-text.text-darken-3.heading1 Heatmap

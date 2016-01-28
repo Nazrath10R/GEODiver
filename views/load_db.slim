@@ -1,0 +1,47 @@
+p
+  span#geo_db_title.light-blue-text.text-darken-3.heading1
+    | #{@geo_db_results['Title']} [#{@geo_db_results['Accession']}]
+    i.activator.material-icons  info
+.input-field.col.s12
+  span.light-blue-text.text-darken-3.heading2 Select Factor to Analyse
+  - @geo_db_results['Factors'].keys.each do |factor|
+    p
+      input id="#{factor.gsub(/[.\s]/, '_')}" name="factor" type="radio" value="#{factor}"
+      label for="#{factor.gsub(/[.\s]/, '_')}"  
+        | #{factor.split(/[.\s]/).map(&:capitalize).join(' ')}
+br
+.input-field.col.s12
+  span.light-blue-text.text-darken-3.heading2 Compare two sets of samples
+.row
+  - @geo_db_results['Factors'].each do |factor, phenotypes|
+    .select_factors id="#{factor.gsub(/[.\s]/, '_')}_select" style="display:none;"
+      .input-field.col.s6 id="#{factor}_select_A"
+        select multiple="" name="groupa[]" 
+          option disabled="" selected="" value=""  Choose your option (Group A)
+          - phenotypes.each do |p|
+            option value="#{p}"
+              | #{p.split(/[.\s]/).map(&:capitalize).join(' ')}
+        label  Group A
+      .input-field.col.s6 id="#{factor}_select_B"
+        select multiple="" name="groupb[]"
+          option disabled="" selected="" value=""  Choose your option  (Group B)
+          - phenotypes.each do |p|
+            option  value="#{p}"
+              | #{p.split(/[.\s]/).map(&:capitalize).join(' ')}
+        label Group B
+.clearfix
+ul.collapsible.adv_param_collapsible data-collapsible="accordion" 
+  li
+    #adv_params_btn.collapsible-header.light-blue.accent-4.waves-effect.waves-light.btn.left Advanced Parameters
+    .clearfix
+    .collapsible-body.adv_param_collapsible
+      .row
+        .input-field.col.s12
+          span.light-blue-text.text-darken-3.heading2 Analyses
+          p
+            input#DGEA_input checked="checked" name="dgea" type="checkbox"
+            label for="DGEA_input"  Differential Gene Expression Analysis
+          p
+            input#GSEA_input checked="checked" name="gsea" type="checkbox"
+            label for="GSEA_input"  Gene Set Enrichment Analysis
+.clearfix
