@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.email         = 'ismail.moghul@gmail.com'
   spec.summary       = 'GeoDiver.'
   spec.description   = 'GeoDiver.'
-  spec.homepage      = '...'
+  spec.homepage      = 'https://github.com/SBCS-Bioinformatics/GEODiver'
   spec.license       = 'AGPL'
 
   spec.files         = `git ls-files -z`.split("\x0")
