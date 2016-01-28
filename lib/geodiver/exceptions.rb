@@ -37,4 +37,27 @@ MSG
       'Number of threads should be a number greater than or equal to 1.'
     end
   end
+
+  ## ENOENT ##
+
+  # Name borrowed from standard Errno::ENOENT, this class serves as a template
+  # for defining errors that mean "expected to find <entity> at <path>, but
+  # didn't".
+  #
+  # ENOENT is raised if and only if an entity was set, either using CLI or
+  # config file. For instance, it's compulsory to set database_dir. But ENOENT
+  # is not raised if database_dir is not set. ENOENT is raised if database_dir
+  # was set, but does not exist.
+  class ENOENT < StandardError
+    def initialize(des, ent)
+      @des = des
+      @ent = ent
+    end
+
+    attr_reader :des, :ent
+
+    def to_s
+      "Could not find #{des}: #{ent}"
+    end
+  end
 end
