@@ -36,7 +36,6 @@ module GeoDiver
     # Write config data to config file.
     def write_config_file
       return unless config_file
-
       File.open(config_file, 'w') do |f|
         f.puts(data.delete_if { |_, v| v.nil? }.to_yaml)
       end
