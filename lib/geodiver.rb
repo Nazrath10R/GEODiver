@@ -35,6 +35,10 @@ module GeoDiver
       check_num_threads
 
       self
+
+      # We don't validate port and host settings. If GeoDiver is run
+      # self-hosted, bind will fail on incorrect values. If GeoDiver
+      # is run via Apache+Passenger, we don't need to worry.
     end
 
     attr_reader :config, :temp_dir, :public_dir, :users_dir, :db_dir
