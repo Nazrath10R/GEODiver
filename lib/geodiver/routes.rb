@@ -54,6 +54,11 @@ module GeoDiver
       set :public_folder, -> { GeoDiver.public_dir }
     end
 
+    # For any request that hits the app, log incoming params at debug level.
+    before do
+      logger.debug params
+    end
+
     get '/' do
       slim :home, layout: false
     end
