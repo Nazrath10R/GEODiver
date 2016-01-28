@@ -1,6 +1,6 @@
 # GeoDiver
 
-
+[![Build Status](https://travis-ci.org/SBCS-Bioinformatics/GEODiver.svg?branch=master)](https://travis-ci.org/SBCS-Bioinformatics/GEODiver)
 
 
 
@@ -8,6 +8,7 @@
 
 ## Introduction
 
+GeoDiver is a web app that allows users to easily analyse GEO datasets.
 
 
 
@@ -15,7 +16,6 @@
 
 
 
--
 ## Installation
 ### Installation Requirements
 * Ruby (>= 2.0.0)
@@ -25,7 +25,7 @@
 Simply run the following command in the terminal.
 
 ```bash
-gem install geodiver
+gem install geodiver 
 ```
 
 If that doesn't work, try `sudo gem install geodiver` instead.
@@ -113,4 +113,4 @@ Examples:
 
 <hr>
 
-This program was developed at [QMUL](http://sbcs.qmul.ac.uk) as part of the Bioinformatics Masters Course.
+This program was developed at [QMUL](http://sbcs.qmul.ac.uk) as part of the [Bioinformatics Masters Course](http://www.qmul.ac.uk/postgraduate/taught/coursefinder/courses/121410.html).
