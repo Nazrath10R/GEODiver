@@ -21,13 +21,13 @@ module GeoDiver
     class << self
       extend Forwardable
 
-      def_delegators GeoDiver, :config, :logger, :public_dir, :users_dir,
-                     :db_dir
+      def_delegators GeoDiver, :logger, :public_dir, :users_dir, :db_dir
 
       #
       def init(params, user)
         @user = user
-        assert_params(params)
+        @params = params
+        assert_params
         setup_run_and_public_dir
       end
 
@@ -41,8 +41,7 @@ module GeoDiver
       private
 
       #
-      def assert_params(params)
-        @params = params
+      def assert_params
         assert_geo_db_present
       end
 
