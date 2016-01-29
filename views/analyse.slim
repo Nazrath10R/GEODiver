@@ -2,17 +2,17 @@
   .section
     .card.analyse_card
       .card-content
-        span.card-title.light-blue-text.text-darken-3 Analyse GEO Datasets
-        form#input action="/load_geo_db"
+        form#load_geo_db
+          span.card-title.light-blue-text.text-darken-3 Analyse GEO Datasets
           #search_geo_dataset.input-field
             i.material-icons.prefix search
-            input#search_geo_db.validate length="7" name="geo_db" type="text"
+            input#search_geo_db name="geo_db" type="text" spellcheck="false" placeholder="Enter a GEO Dataset Accession Number."
             label for="search_geo_db"  Search GEO Dataset
-          #geo_db_summary style="display:none;" 
-          button#analyse_geo_btn.btn.waves-effect.waves-light.light-blue.accent-4.btn-large.right.load_geo_db type="submit" value="input" 
+          button.btn.waves-effect.waves-light.light-blue.accent-4.btn-large.right.load_geo_db_btn type="submit" value="input"
             | Load GEO Dataset
             i.material-icons.right send
           .clearfix
+        #geo_db_summary style="display:none;" 
         .clearfix style="padding-bottom:1rem;"
       .card-reveal
         span.card-title.grey-text.text-darken-4
