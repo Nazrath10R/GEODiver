@@ -100,13 +100,13 @@ module GeoDiver
 
       def parse_geo_db(content)
         {
-          "Accession": content.match(/\^DATASET = (.*)/)[1],
-          "Title": content.match(/!dataset_title = (.*)/)[1],
-          "Description": content.match(/!dataset_description = (.*)/)[1],
-          "Sample_Organism": content.match(/!dataset_platform_organism = (.*)/)[1],
-          "Factors": parse_factors(content),
-          "Reference": content.match(/!Database_ref = (.*)/)[1],
-          "Update_Date": content.match(/!dataset_update_date = (.*)/)[1]
+          Accession: data.match(/\^DATASET = (.*)/)[1],
+          Title: data.match(/!dataset_title = (.*)/)[1],
+          Description: data.match(/!dataset_description = (.*)/)[1],
+          Sample_Organism: data.match(/!dataset_platform_organism = (.*)/)[1],
+          Factors: parse_factors(data),
+          Reference: data.match(/!Database_ref = (.*)/)[1],
+          Update_Date: data.match(/!dataset_update_date = (.*)/)[1]
         }
       end
 
