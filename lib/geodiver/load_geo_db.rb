@@ -21,8 +21,7 @@ module GeoDiver
     class << self
       extend Forwardable
 
-      def_delegators GeoDiver, :config, :logger, :public_dir, :users_dir,
-                     :db_dir
+      def_delegators GeoDiver, :logger, :public_dir, :db_dir
 
       #
       def init(params)
@@ -58,14 +57,16 @@ module GeoDiver
         fail ArgumentError, 'No GEO database provided.'
       end
 
+      #
       def download_geo_meta_data(output_json)
-        file    = download_geo_file
-        content = read_geo_file(file)
-        data    = parse_geo_db(content)
+        file = download_geo_file
+        data = read_geo_file(file)
+        data = parse_geo_db(data)
         write_to_json(data, output_json)
         data
       end
 
+      #
       def download_geo_file
         remote_dir = generate_remote_url
         output_dir = File.join(db_dir, @params['geo_db'])
@@ -76,6 +77,7 @@ module GeoDiver
         output_file.gsub(/.gz$/, '')
       end
 
+      #
       def generate_remote_url
         if @params['geo_db'].length == 6
           remote_dir = 'ftp://ftp.ncbi.nlm.nih.gov//geo/datasets/GDSnnn/' \
@@ -89,16 +91,18 @@ module GeoDiver
         remote_dir
       end
 
+      #
       def read_geo_file(file)
-        content = []
+        data = []
         IO.foreach(file) do |line|
           break if line =~ /^#ID_REF/
-          content << line
+          data << line
         end
-        content.join
+        data.join
       end
 
-      def parse_geo_db(content)
+      #
+      def parse_geo_db(data)
         {
           Accession: data.match(/\^DATASET = (.*)/)[1],
           Title: data.match(/!dataset_title = (.*)/)[1],
@@ -110,19 +114,21 @@ module GeoDiver
         }
       end
 
-      def parse_factors(content)
-        subsets = content.gsub(/\^DATA.*\n/, '').gsub(/\![dD]ata.*\n/, '')
+      #
+      def parse_factors(data)
+        subsets = data.gsub(/\^DATA.*\n/, '').gsub(/\![dD]ata.*\n/, '')
         results = {}
         subsets.lines.each_slice(5) do |subset|
-          description = subset[2].match(/\!subset_description = (.*)/)[1]
+          desc = subset[2].match(/\!subset_description = (.*)/)[1]
           type = subset[4].match(/\!subset_type = (.*)/)[1].gsub(' ', '.')
           # samples = subset[3].match(/\!subset_sample_id = (.*)/)[1]
           results[type] ||= []
-          results[type] << description
+          results[type] << desc
         end
         results
       end
 
+      #
       def write_to_json(hash, output_json)
         File.open(output_json, 'w') { |f| f.puts hash.to_json }
       end
