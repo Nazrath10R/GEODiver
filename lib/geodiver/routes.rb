@@ -4,7 +4,8 @@ require 'sinatra/base'
 require 'sinatra/cross_origin'
 require 'slim'
 
-require 'geodiver/r_core'
+require 'geodiver/load_geo_db'
+require 'geodiver/geo_analysis'
 require 'geodiver/version'
 
 module GeoDiver
@@ -75,15 +76,15 @@ module GeoDiver
 
     post '/load_geo_db' do
       redirect '/auth/google_oauth2' if session[:uid].nil?
-      RCore.init_load_db(params)
-      @geo_db_results = RCore.run_load_db
+      LoadGeoData.init(params)
+      @geo_db_results = LoadGeoData.run
       slim :load_db, layout: false
     end
 
     post '/analyse' do
       redirect '/auth/google_oauth2' if session[:uid].nil?
-      RCore.init_analysis(params, session[:user])
-      @results_link = RCore.run_analysis
+      GeoAnalysis.init(params, session[:user])
+      @results_link = GeoAnalysis.run
       slim :results, layout: false
     end
 
@@ -108,7 +109,7 @@ module GeoDiver
     # This error block will only ever be hit if the user gives us a funny
     # sequence or incorrect advanced parameter. Well, we could hit this block
     # if someone is playing around with our HTTP API too.
-    error RCore::ArgumentError do
+    error LoadGeoData::ArgumentError, GeoAnalysis::ArgumentError do
       status 400
       slim :"500", layout: false
     end
@@ -118,7 +119,7 @@ module GeoDiver
     # or something really weird going on.
     # TODO: If we hit this error block we show the stacktrace to the user
     # requesting them to post the same to our Google Group.
-    error Exception, RCore::RuntimeError do
+    error Exception, LoadGeoData::RuntimeError, GeoAnalysis::RuntimeError do
       status 500
       slim :"500", layout: false
     end

@@ -1,8 +1,8 @@
 require 'json'
 # GeoDiver NameSpace
 module GeoDiver
-  # module to run the R core.
-  module RCore
+  # Module to run the GEO analysis
+  module GeoAnalysis
     # To signal error in query sequence or options.
     #
     # ArgumentError is raised when ... exit status is 1; see [1].
@@ -25,29 +25,14 @@ module GeoDiver
                      :db_dir
 
       #
-      def init_load_db(params)
-        logger.debug('Loading Database')
-        assert_load_db_params(params)
-      end
-
-      #
-      def run_load_db
-        copy_exemplar_geo_meta_json
-        soft_link_exemplar_geo_to_public_dir
-        JSON.parse(IO.read(@public_meta_json))
-      end
-
-      ## => Analysis
-
-      #
-      def init_analysis(params, user)
+      def init(params, user)
         @user = user
-        assert_analysis_params(params)
+        assert_params(params)
         setup_run_and_public_dir
       end
 
       #
-      def run_analysis
+      def run
         run_dgea
         soft_link_output_dir_to_public_dir
         generate_relative_results_link
@@ -56,9 +41,8 @@ module GeoDiver
       private
 
       #
-      def assert_load_db_params(params)
+      def assert_params(params)
         @params = params
-        logger.debug("Params: #{@params}")
         assert_geo_db_present
       end
 
@@ -66,34 +50,6 @@ module GeoDiver
       def assert_geo_db_present
         return unless @params['geo_db'].nil? || @params['geo_db'].empty?
         fail ArgumentError, 'No GEO database provided.'
-      end
-
-      # Copy the exemplar meta json file to the Users directory
-      def copy_exemplar_geo_meta_json
-        exemplar_meta_json_file = File.join(GeoDiver.root, 'exemplar/geo.json')
-        @meta_json_file = File.join(db_dir, @params['geo_db'],
-                                    "#{@params['geo_db']}.json")
-        FileUtils.mkdir(File.join(db_dir, @params['geo_db']))
-        FileUtils.cp(exemplar_meta_json_file, @meta_json_file)
-      end
-
-      #
-      def soft_link_exemplar_geo_to_public_dir
-        @public_meta_json = File.join(public_dir, 'GeoDiver/DBs/',
-                                      "#{@params['geo_db']}.json")
-        FileUtils.ln_s(@meta_json_file, @public_meta_json)
-      end
-
-      # => Analysis
-
-      #
-      def assert_analysis_params(params)
-        @params = params
-        assert_geo_db_present
-        # {"geo_db"=>"GDS9832", "factor"=>"disease.state",
-        # "groupa"=>["Convalescent", "Dengue Fever"],
-        # "groupb"=>["Dengue Hemorrhagic Fever", "healthy control"],
-        # "dgea"=>"on", "gsea"=>"on"}
       end
 
       #
@@ -114,7 +70,7 @@ module GeoDiver
       #
       def dgea_cmd
         "Rscript #{File.join(GeoDiver.root, 'RCore/DGEA.R')}" \
-        " --accession GDS5093 --factor '#{@params['factor']}'" \
+        " --accession #{@params['geo_db']} --factor '#{@params['factor']}'" \
         " --popA '#{@params['groupa'].join(',')}'" \
         " --popB '#{@params['groupb'].join(',')}'" \
         " --popname1 'Dengue' --popname2 'Normal'" \
