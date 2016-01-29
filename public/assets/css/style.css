@@ -159,6 +159,7 @@ font-weight:500;
 
 .multiple-select-dropdown {
   position: initial !important;
+  overflow-y: scroll;
 }
 
 .dropdown-content {
