@@ -9,28 +9,28 @@
       span.light-blue-text.text-darken-3.heading2 Select Factor to Analyse
       - @geo_db_results['Factors'].keys.each do |factor|
         p
-          input id="#{factor.gsub(/[.\s]/, '_')}" name="factor" type="radio" value="#{factor}"
-          label for="#{factor.gsub(/[.\s]/, '_')}"  
+          input id="#{factor.gsub(/[\.\:\#\s]/, '_')}" name="factor" type="radio" value="#{factor}"
+          label for="#{factor.gsub(/[\.\:\#\s]/, '_')}"  
             | #{factor.split(/[.\s]/).map(&:capitalize).join(' ')}
     br
     .input-field.col.s12
       span.light-blue-text.text-darken-3.heading2 Compare two sets of samples
     .row
-        .select_factors id="#{factor.gsub(/[.\s]/, '_')}_select" style="display:none;"
-          .input-field.col.s6 id="#{factor}_select_A"
       - @geo_db_results['Factors'].each do |factor, phenotypes|
+        .select_factors id="#{factor.gsub(/[\.\:\#\s]/, '_')}_select" style="display:none;"
+          .input-field.col.s6
             select multiple="" name="groupa[]" 
               option disabled="" selected="" value=""  Choose your option (Group A)
               - phenotypes.each do |p|
                 option value="#{p}"
-                  | #{p.split(/[.\s]/).map(&:capitalize).join(' ')}
+                  | #{p.split(/[\s]/).map(&:capitalize).join(' ')}
             label  Group A
-          .input-field.col.s6 id="#{factor}_select_B"
+          .input-field.col.s6
             select multiple="" name="groupb[]"
               option disabled="" selected="" value=""  Choose your option  (Group B)
               - phenotypes.each do |p|
                 option  value="#{p}"
-                  | #{p.split(/[.\s]/).map(&:capitalize).join(' ')}
+                  | #{p.split(/[\s]/).map(&:capitalize).join(' ')}
             label Group B
     .clearfix
     ul.collapsible.adv_param_collapsible data-collapsible="accordion" 
@@ -49,4 +49,4 @@
                 label for="GSEA_input"  Gene Set Enrichment Analysis
     button#analyse_geo_btn.btn.waves-effect.waves-light.light-blue.accent-4.btn-large.right.analyse_geo_btn type="submit" value="input" 
       | Analyse GEO Dataset
-  .clearfix
+  .clearfix style="padding-bottom:1rem;"

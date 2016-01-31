@@ -14,6 +14,23 @@ if (!GD) {
 //GD module
 (function() {
 
+  GD.setUpValidatorDefaults = function() {
+    $.validator.addMethod('geoDb', function (value) { 
+        return /^GDS\d\d\d\d?$/.test(value); 
+    }, 'Please enter a valid GEO dataset accession number (in the format GDSxxxx).');
+
+    $.validator.setDefaults({
+        errorClass: 'invalid',
+        validClass: "valid",
+        errorPlacement: function (error, element) {
+            $(element)
+                .closest("form")
+                .find("label[for='" + element.attr("id") + "']")
+                .attr('data-error', error.text());
+        },
+    });
+  }
+
   GD.loadGeoDbValidation = function() {
     'use strict';
     $('#load_geo_db').validate({
@@ -24,72 +41,63 @@ if (!GD) {
         },
       },
       submitHandler: function(form) {
-        GD.loadGeoDbAjax();
+        var geo_db = $('input[name=geo_db]').val()
+        $('#model_header_text').text('Loading GEO Dataset: ' + geo_db)
+        $('#model_text').text('This should take a few seconds. Please leave this page open')
+        $('#loading_modal').openModal({ dismissible: false });
+        $.ajax({
+          type: 'POST',
+          url: '/load_geo_db',
+          data: $('#load_geo_db').serialize(),
+          success: function(response) {
+            $('.card-action').remove()
+            $('#results_section').empty();
+            $('.load_geo_db_btn').removeClass('btn-large')
+            $( response ).insertAfter( "#load_geo_card" );
+            $('#geo_db_summary').html(response);
+            $('#geo_db_summary').show();
+            $('.adv_param_collapsible').collapsible();
+            $("input:radio[name=factor]:first").attr('checked', true);
+            $('#' + $("input:radio[name=factor]:first").attr('id') + '_select').show()
+            GD.addFactorToggle()
+            $('select').material_select();
+            GD.addDataSetInfo();
+            GD.analyseValidation();
+            $('#loading_modal').closeModal();
+          },
+          error: function(e, status) {
+            GD.ajaxError();
+          }
+        });
       }
     });
   };
-
-
 
   GD.analyseValidation = function() {
     'use strict';
     $('#analyse').validate({
       rules: {},
       submitHandler: function(form) {
-        GD.GeoAnalysisAjax();
-      }
-    });
-  };
-
-  GD.loadGeoDbAjax = function() {
-    'use strict';
-    var geo_db = $('input[name=geo_db]').val()
-    $('#model_header_text').text('Loading GEO Dataset: ' + geo_db)
-    $('#model_text').text('This should take a few seconds. Please leave this page open')
-    $('#loading_modal').openModal({ dismissible: false });
-    $.ajax({
-      type: 'POST',
-      url: '/load_geo_db',
-      data: $('#load_geo_db').serialize(),
-      success: function(response) {
-        $('.load_geo_db_btn').removeClass('btn-large')
-        $('#geo_db_summary').html(response);
-        $('#geo_db_summary').show();
-        $('.adv_param_collapsible').collapsible();
-        $("input:radio[name=factor]:first").attr('checked', true);
-        $('#' + $("input:radio[name=factor]:first").attr('id') + '_select').show()
-        GD.addFactorToggle()
-        $('select').material_select();
-        GD.addDataSetInfo();
-        GD.analyseValidation();
-        $('#loading_modal').closeModal();
-      },
-      error: function(e, status) {
-        GD.ajaxError();
-      }
-    });
-  };
-
-  GD.GeoAnalysisAjax = function() {
-    'use strict';
-    var geo_db = $('input[name=geo_db]').val()
-    $('#model_header_text').text('Analysing GEO Dataset: ' + geo_db)
-    $('#model_text').text('This should take a few minutes. Please leave this page open')
-    $('#loading_modal').openModal({ dismissible: false});
-    $.ajax({
-      type: 'POST',
-      url: '/analyse',
-      data: $('#analyse').serialize(),
-      success: function(response) {
-        $('#results_section').html(response)
-        $('#results_section').show()
-        $('#results_tabs').tabs(); // init material tabs
-        GD.createPlots()
-        $('.materialboxed').materialbox(); // init materialbox
-        $('#loading_modal').closeModal();
-      },
-      error: function(e, status) {
-        GD.ajaxError();
+        var geo_db = $('input[name=geo_db]').val()
+        $('#model_header_text').text('Analysing GEO Dataset: ' + geo_db)
+        $('#model_text').text('This should take a few minutes. Please leave this page open')
+        $('#loading_modal').openModal({ dismissible: false});
+        $.ajax({
+          type: 'POST',
+          url: '/analyse',
+          data: $('#analyse').serialize(),
+          success: function(response) {
+            $('#results_section').html(response)
+            $('#results_section').show()
+            $('#results_tabs').tabs(); // init material tabs
+            GD.createPlots()
+            $('.materialboxed').materialbox(); // init materialbox
+            $('#loading_modal').closeModal();
+          },
+          error: function(e, status) {
+            GD.ajaxError();
+          }
+        });
       }
     });
   };
@@ -109,24 +117,6 @@ if (!GD) {
     }
   }
 
-  GD.setUpValidatorDefaults = function() {
-    $.validator.addMethod('geoDb', function (value) { 
-        return /^GDS\d\d\d\d?$/.test(value); 
-    }, 'Please enter a valid GEO dataset accession number (in the format GDSxxxx).');
-
-
-    $.validator.setDefaults({
-        errorClass: 'invalid',
-        validClass: "valid",
-        errorPlacement: function (error, element) {
-            $(element)
-                .closest("form")
-                .find("label[for='" + element.attr("id") + "']")
-                .attr('data-error', error.text());
-        },
-    });
-  }
-
   GD.createPlots = function() {
     jsonFile = $('#DGEA').data("results-json")
     $.getJSON(jsonFile, function(json) {
@@ -134,7 +124,6 @@ if (!GD) {
       GD.createVolcanoPlot(json.vol.logFC, json.vol.pVal)
     });
   }
-
 
   GD.createPCAPLOT = function(cumVar, expVar, pcaNames) {
     var CumulativePCA = { x: pcaNames, y: cumVar, type: 'scatter', name: 'Cumulative PCA' };
@@ -192,8 +181,6 @@ if (!GD) {
     });
   }
 }());
-
-
 
 
 (function($) {
