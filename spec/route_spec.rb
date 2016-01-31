@@ -62,8 +62,7 @@ module GeoDiver
       results = validator.validate_text(html)
 
       results.errors.each { |err| puts err.to_s } if results.errors.length > 0
-      # ignore Bad value screen,projection for attribute media on element link
-      results.errors.length.should == 2
+      results.errors.length.should == 0
     end
   end
 end
