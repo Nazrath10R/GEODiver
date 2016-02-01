@@ -120,9 +120,13 @@ if (!GD) {
   GD.createPlots = function() {
     jsonFile = $('#DGEA').data("results-json")
     $.getJSON(jsonFile, function(json) {
-      GD.createPCAPLOT(json.pc.cumVar, json.pc.expVar, json.pc.pcnames)
-      GD.createVolcanoPlot(json.vol.logFC, json.vol.pVal, json.vol.genes)
+      pcaPlot = GD.createPCAPLOT(json.pc.cumVar, json.pc.expVar, json.pc.pcnames)
+      volcanoPlot = GD.createVolcanoPlot(json.vol.logFC, json.vol.pVal, json.vol.genes)
     });
+    window.onresize = function() {
+      Plotly.Plots.resize(pcaPlot);
+      Plotly.Plots.resize(volcanoPlot);
+    }
   }
 
   GD.createPCAPLOT = function(cumVar, expVar, pcaNames) {
@@ -130,21 +134,28 @@ if (!GD) {
     var PCA = { x: pcaNames, y: expVar, type: 'scatter', name: 'PCA' };
     var data = [CumulativePCA, PCA];
     var layout = { legend: { x: 0, y: 100, traceorder: 'normal' } };
-    Plotly.newPlot('PCA_plot', data, layout);
+
+    var WIDTH_IN_PERCENT_OF_PARENT = 100
+    var PCAplotGd3 = Plotly.d3.select('#PCA_plot')
+                       .style({width: WIDTH_IN_PERCENT_OF_PARENT + '%',
+                              'margin-left': (100 - WIDTH_IN_PERCENT_OF_PARENT) / 2 + '%'});
+    var pcaPlot = PCAplotGd3.node();
+    Plotly.plot(pcaPlot, data, layout)
+    return pcaPlot
   }
 
   // 
   GD.createVolcanoPlot = function(xValues, yValues, genes) {
     var trace1 = { x: xValues, y: yValues, text: genes, mode: 'markers', type: 'scatter', name: 'volcano_plot', marker: { size: 7.5 } };
     var data = [trace1];
-    var layout = {
-      xaxis: { range: [-1.15, 1.15]},
-      yaxis: { range: [5, 28] },
-      hovermode: 'closest',
-      xaxis: { title: 'Log 2 Fold Change' },
-      yaxis: { title: '-Log10(P Value)' }
-    };
-    Plotly.newPlot('volcano_plot', data, layout);
+    var layout = { xaxis: { range: [-1.15, 1.15]}, yaxis: { range: [5, 28] }, hovermode: 'closest', xaxis: { title: 'Log 2 Fold Change' }, yaxis: { title: '-Log10(P Value)' } };
+    var WIDTH_IN_PERCENT_OF_PARENT = 100
+    var volcanoPlotGd3 = Plotly.d3.select('#volcano_plot')
+                       .style({width: WIDTH_IN_PERCENT_OF_PARENT + '%',
+                              'margin-left': (100 - WIDTH_IN_PERCENT_OF_PARENT) / 2 + '%'});
+    var volcanoPlot = volcanoPlotGd3.node();
+    Plotly.plot(volcanoPlot, data, layout)
+    return volcanoPlot
   }
 
   // 
