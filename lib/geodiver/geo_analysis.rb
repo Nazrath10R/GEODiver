@@ -23,6 +23,7 @@ module GeoDiver
 
       def_delegators GeoDiver, :logger, :public_dir, :users_dir, :db_dir
 
+      def_delegators GeoDiver::LoadGeoData, :load_geo_db
       #
       def init(params, user)
         @user = user
@@ -62,19 +63,23 @@ module GeoDiver
       #
       def run_dgea
         return unless @params['dgea'] == 'on'
+        load_geo_db.join # wait until geo db has been loaded
         system(dgea_cmd)
         assert_dgea_output
       end
 
       #
       def dgea_cmd
+        dbrdata = File.join(db_dir, @params['geo_db'],
+                            "#{@params['geo_db']}.Rdata")
         "Rscript #{File.join(GeoDiver.root, 'RCore/DGEA.R')}" \
-        " --accession #{@params['geo_db']} --factor '#{@params['factor']}'" \
+        " --dbrdata #{dbrdata} --accession #{@params['geo_db']} " \
+        " --factor '#{@params['factor']}'" \
         " --popA '#{@params['groupa'].join(',')}'" \
         " --popB '#{@params['groupb'].join(',')}'" \
         " --popname1 'Dengue' --popname2 'Normal'" \
         ' --topgenecount 250 --foldchange 0.3 --thresholdvalue 0.005' \
-        " --working_dir '#{@run_dir}/'"
+        " --outputdir '#{@run_dir}/'"
       end
 
       #

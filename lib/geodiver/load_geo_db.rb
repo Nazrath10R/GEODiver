@@ -23,6 +23,8 @@ module GeoDiver
 
       def_delegators GeoDiver, :logger, :public_dir, :db_dir
 
+      attr_accessor :load_geo_db
+
       #
       def init(params)
         logger.debug('Loading Database')
@@ -31,15 +33,12 @@ module GeoDiver
 
       #
       def run
-        meta_json = File.join(db_dir, @params['geo_db'],
-                              "#{@params['geo_db']}.json")
-        if File.exist?(meta_json)
-          meta_data = JSON.parse(IO.read(meta_json))
-        else
-          meta_data = download_geo_meta_data(meta_json)
-        end
-        soft_link_meta_json_to_public_dir(meta_json)
+        @meta_json = File.join(db_dir, @params['geo_db'],
+                               "#{@params['geo_db']}.json")
+        meta_data = (File.exist?(@meta_json)) ? parse_meta : download_meta_data
+        soft_link_meta_json_to_public_dir
         logger.debug("Meta Data: #{meta_data}")
+        convert_geo_db_into_r_objects
         meta_data
       end
 
@@ -57,12 +56,15 @@ module GeoDiver
         fail ArgumentError, 'No GEO database provided.'
       end
 
+      def parse_meta
+        JSON.parse(IO.read(@meta_json))
+      end
       #
-      def download_geo_meta_data(output_json)
+      def download_meta_data
         file = download_geo_file
         data = read_geo_file(file)
         data = parse_geo_db(data)
-        write_to_json(data, output_json)
+        write_to_json(data, @meta_json)
         data
       end
 
@@ -71,10 +73,10 @@ module GeoDiver
         remote_dir = generate_remote_url
         output_dir = File.join(db_dir, @params['geo_db'])
         FileUtils.mkdir(output_dir) unless Dir.exist? output_dir
-        output_file = File.join(output_dir, "#{@params['geo_db']}.soft.gz")
-        system "wget #{remote_dir} --output-document #{output_file}"
-        system "gunzip --force #{output_file}" # force to overwrite file
-        output_file.gsub(/.gz$/, '')
+        compressed = File.join(output_dir, "#{@params['geo_db']}.soft.gz")
+        system "wget #{remote_dir} --output-document #{compressed}"
+        system "gunzip --force -c #{compressed} > #{compressed.gsub('.gz', '')}"
+        compressed.gsub('.gz', '')
       end
 
       #
@@ -134,11 +136,26 @@ module GeoDiver
       end
 
       #
-      def soft_link_meta_json_to_public_dir(meta_json)
+      def soft_link_meta_json_to_public_dir
         public_meta_json = File.join(public_dir, 'GeoDiver/DBs/',
                                      "#{@params['geo_db']}.json")
         return if File.exist? public_meta_json
-        FileUtils.ln_s(meta_json, public_meta_json)
+        FileUtils.ln_s(@meta_json, public_meta_json)
+      end
+
+      def convert_geo_db_into_r_objects
+        return if File.exist?(File.join(db_dir, @params['geo_db'],
+                                        "#{@params['geo_db']}.Rdata"))
+        logger.debug("Running: #{load_geo_db_cmd}")
+        @load_geo_db = Thread.new { system(load_geo_db_cmd) }
+      end
+
+      def load_geo_db_cmd
+        geo_db_dir = File.join(db_dir, @params['geo_db'])
+        "Rscript #{File.join(GeoDiver.root, 'RCore/downloadGeo.R')}" \
+        " --accession #{@params['geo_db']}" \
+        " --geodbpath #{File.join(geo_db_dir, "#{@params['geo_db']}.soft.gz")}"\
+        " --outrdata  #{File.join(geo_db_dir, "#{@params['geo_db']}.Rdata")}"
       end
     end
   end
