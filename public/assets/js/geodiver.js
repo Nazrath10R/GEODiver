@@ -121,7 +121,7 @@ if (!GD) {
     jsonFile = $('#DGEA').data("results-json")
     $.getJSON(jsonFile, function(json) {
       GD.createPCAPLOT(json.pc.cumVar, json.pc.expVar, json.pc.pcnames)
-      GD.createVolcanoPlot(json.vol.logFC, json.vol.pVal)
+      GD.createVolcanoPlot(json.vol.logFC, json.vol.pVal, json.vol.genes)
     });
   }
 
@@ -134,12 +134,8 @@ if (!GD) {
   }
 
   // 
-  GD.createVolcanoPlot = function(xValues, yValues) {
-    var trace1 = {
-      x: xValues, y: yValues, mode: 'markers', type: 'scatter', name: 'volcano_plot',
-      text: ['DDR1', 'RFC2', 'HSPA6', 'PAX8', 'GUCA1A', 'UBA7', 'THRA', 'PTPN21', 'CCL5', 'CYP2E1', 'EPHB3', 'ESRRA', 'CYP2A6', 'SCARB1', 'TTLL12', 'LINC00152', 'WFDC2', 'MAPK1', 'MAPK1', 'ADAM32', 'SPATA17', 'PRR22', 'PRR22', 'PXK', 'PXK', 'VPS18', 'MSANTD3', 'SLC46A1', 'SLC46A1', 'TIMD4', 'SLC39A5', 'ZDHHC11', 'ATP6V1E2', 'AFG3L1P', 'CILP2', 'CILP2', 'PIGX', 'TMEM196', 'SLC39A13', 'BEST4', 'AK9', 'CORO6', 'TMEM106A', 'TMEM106A', 'ALG10', 'ALG10', 'TTC39C', 'NEXN', 'C15orf40', 'RAX2', 'MFAP3', 'EYA3', 'GIMAP1', 'GIMAP1', 'GIMAP1', 'KLK8', 'CCDC65', 'CCDC65', 'FAM122C', 'FAM122C', 'CFAP53', 'CFAP53', 'ARMCX4', 'RBBP6', 'CENPBD1', 'TRIOBP', 'TRIOBP', 'CATSPER1', 'HOXD4', 'GSC', 'SP7', 'PDE7A', 'CNOT7', 'CRYZL1', 'PRSS33', 'PRSS33', 'C19orf26', 'C19orf26', 'MCMDC2', 'TIRAP', 'LEAP2', 'MSI2', 'SCIN', 'SCIN', 'CTCFL', 'C4orf33', 'C4orf33', 'C4orf33', 'ZNF333', 'TVP23C', 'RDH10', 'RDH10', 'SRSF12', 'FAM71A', 'FAM71A', 'GAPT', 'FLJ30901', 'ERICH5', 'ERICH5', 'CCDC185'],
-      marker: { size: 7.5 }
-    };
+  GD.createVolcanoPlot = function(xValues, yValues, genes) {
+    var trace1 = { x: xValues, y: yValues, text: genes, mode: 'markers', type: 'scatter', name: 'volcano_plot', marker: { size: 7.5 } };
     var data = [trace1];
     var layout = {
       xaxis: { range: [-1.15, 1.15]},
