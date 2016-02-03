@@ -96,7 +96,7 @@ footer.page-footer {
 }
 
 .app {
-    background-color: #b5b5b5;
+    background-color: #e3e3e3;
 }
 
 
@@ -219,4 +219,30 @@ footer.page-footer {
     -ms-transform: translateY(-140%);
     -o-transform: translateY(-140%);
     transform: translateY(-140%);
+}
+
+
+.navbar_centered{
+  left: 50%;
+  transform: translateX(-50%);
+  position: absolute;
+  top: 0px !important;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: .8px;
+}
+.navbar_centered li.active {
+  -webkit-box-shadow: inset 0px -3px 0px 0px #fff;
+  -moz-box-shadow: inset 0px -3px 0px 0px #fff;
+  box-shadow: inset 0px -3px 0px 0px #fff;
+}
+
+.navbar_centered li:hover {
+ -webkit-box-shadow: inset 0px -3px 0px 0px #fff;
+  -moz-box-shadow: inset 0px -3px 0px 0px #fff;
+  box-shadow: inset 0px -3px 0px 0px #fff; 
+}
+
+.navbar_centered li a {
+  min-width: 150px; text-align: center;
 }
