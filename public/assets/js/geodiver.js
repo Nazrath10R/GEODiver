@@ -52,7 +52,6 @@ if (!GD) {
           success: function(response) {
             $('.card-action').remove()
             $('#results_section').empty();
-            $('.load_geo_db_btn').removeClass('btn-large')
             $( response ).insertAfter( "#load_geo_card" );
             $('#geo_db_summary').html(response);
             $('#geo_db_summary').show();
