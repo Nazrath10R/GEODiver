@@ -4,33 +4,36 @@ html lang="en"
     meta content=("text/html; charset=UTF-8") http-equiv="Content-Type"
     meta content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no" name="viewport"
     title GeoDiver
-    /! CSS
     link type="text/css" rel="stylesheet"  href="#{uri('assets/css/style.min.css')}" 
   body.app
     nav.blue.darken-4
       .nav-wrapper
-        .row
-          .col.s2
-            span.hide-on-med-and-down.logo
-              img height="64" src="#{uri('assets/img/logo.svg')}" alt="GeoDiver Logo"
-            a#logo-container.brand-logo.white-text href="#{uri('..')}"
-              | &nbsp;GeoDiver
-          .col.s8
-            ul.nav_centered.tabs.hide-on-med-and-down
-              li.tab
-                a.white-text href="/analyse"  Analyse
-              li.tab
-                a.white-text href="/history"  History
-          .col.s2
-            ul.right.hide-on-med-and-down
-              li
-                a.white-text.dropdown-button href="#!" data-activates="dropdown" data-beloworigin="true"
-                  .row
-                    .col.s8
-                      span.right
-                        | #{session[:user].info['first_name']}
-                    .col.s4                  
-                        img.circle.profile_img.left alt="Profile Picture" src="#{session[:user].info['image']}" /
+        span.hide-on-med-and-down.logo
+          img height="64" src="#{uri('assets/img/logo.svg')}" alt="GeoDiver Logo"
+        a#logo-container.brand-logo.white-text href="#{uri('..')}"
+          | &nbsp;GeoDiver
+        ul.hide-on-med-and-down.navbar_centered
+          - if uri =~ %r{/analyse}
+            li.active
+              a.white-text href="/analyse"  Analyse               
+          - else
+            li
+              a.white-text href="/analyse"  Analyse               
+          - if uri =~ %r{/my_results}
+            li.active
+              a.white-text href="/my_results"  My Results 
+          - else
+            li
+              a.white-text href="/my_results"  My Results 
+        ul.right.hide-on-med-and-down
+          li
+            a.white-text.dropdown-button href="#!" data-activates="dropdown" data-beloworigin="true"
+              .row
+                .col.s8
+                  span.right
+                    | #{session[:user].info['first_name']}
+                .col.s4                  
+                    img.circle.profile_img.left alt="Profile Picture" src="#{session[:user].info['image']}" /
           a.button-collapse data-activates="nav-mobile" href="#" 
             i.material-icons menu
         ul#nav-mobile.side-nav
