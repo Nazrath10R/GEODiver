@@ -121,11 +121,18 @@ if (!GD) {
     $.getJSON(jsonFile, function(json) {
       pcaPlot = GD.createPCAPLOT(json.pc.cumVar, json.pc.expVar, json.pc.pcnames)
       volcanoPlot = GD.createVolcanoPlot(json.vol.logFC, json.vol.pVal, json.vol.genes)
+      GD.initialize_toptable(json.toptable)
     });
     window.onresize = function() {
       Plotly.Plots.resize(pcaPlot);
       Plotly.Plots.resize(volcanoPlot);
     }
+  }
+
+  GD.initialize_toptable = function(dataset) {
+    $('#toptable').DataTable( {
+        data: dataset
+    })
   }
 
   GD.createPCAPLOT = function(cumVar, expVar, pcaNames) {
