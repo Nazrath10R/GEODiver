@@ -98,6 +98,7 @@ module GeoDiver
     get '/logout' do
       session[:uid] = nil
       session[:user] = nil
+      # TODO remove user files from public dir
       redirect '/'
     end
 
