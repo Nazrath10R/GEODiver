@@ -69,9 +69,9 @@ module GeoDiver
       slim :analyse
     end
 
-    get '/history' do
+    get '/my_results' do
       redirect '/auth/google_oauth2' if session[:uid].nil?
-      slim :history, layout: false
+      slim :my_results
     end
 
     post '/load_geo_db' do
