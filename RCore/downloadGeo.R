@@ -3,7 +3,7 @@
 # Filename      : DGEA.R
 # Authors       : IsmailM, Nazrath, Suresh, Marian, Anissa
 # Description   : Differential Gene Expression Analysis
-# Run           : Rscript InputGeo.R --accession GDS5093 --outputdir ~/Desktop/
+# Run           : Rscript DownloadGeo.R --accession GDS5093 --outrdata ~/Desktop/
 # ---------------------------------------------------------
 
 #############################################################################
@@ -30,13 +30,13 @@ argv   <- parse_args(parser)
 #############################################################################
 
 # import data sets and process into expression data
-if (is.null(argv$geodbpath)) {
+if (is.na(argv$geodbpath)) {
   gse <- getGEO(argv$accession, GSEMatrix = TRUE)
 } else {
   gse <- getGEO(filename = argv$geodbpath, GSEMatrix = TRUE)
 }
 eset <- GDS2eSet(gse, do.log2 = FALSE)
 
-if (! is.null(argv$outrdata)){
-    save.image(file = argv$outrdata )
+if (! is.na(argv$outrdata)){
+  save(gse, eset, file = argv$outrdata )
 }

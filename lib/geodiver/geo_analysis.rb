@@ -81,8 +81,11 @@ module GeoDiver
         " --factor '#{@params['factor']}'" \
         " --popA '#{@params['groupa'].join(',')}'" \
         " --popB '#{@params['groupb'].join(',')}'" \
+        " --analyse 'Boxplot,Volcano,PCA,Heatmap'" \
         " --popname1 'Dengue' --popname2 'Normal'" \
         ' --topgenecount 250 --foldchange 0.3 --thresholdvalue 0.005' \
+        " --distance 'euclidean' --clustering 'average'" \
+        ' --heatmaprows 100 --dendrow TRUE --dendcol TRUE ' \
         " --outputdir '#{@run_dir}/'"
       end
 
