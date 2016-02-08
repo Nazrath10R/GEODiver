@@ -65,7 +65,8 @@ module GeoDiver
       #
       def run_dgea
         return unless @params['dgea'] == 'on'
-        load_geo_db.join # wait until geo db has been loaded
+        # wait until geo db has been loaded in background thread
+        load_geo_db.join unless load_geo_db.nil?
         logger.debug("Running CMD: #{dgea_cmd}")
         system(dgea_cmd)
         assert_dgea_output
