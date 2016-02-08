@@ -52,11 +52,13 @@ module GeoDiver
 
       #
       def assert_geo_db_present
+        logger.debug('Checking if the GEO DB parameter is present.')
         return unless @params['geo_db'].nil? || @params['geo_db'].empty?
         fail ArgumentError, 'No GEO database provided.'
       end
 
       def parse_meta
+        logger.debug("Parse the Meta JSON file at: #{@meta_json}")
         JSON.parse(IO.read(@meta_json))
       end
       #
@@ -74,7 +76,9 @@ module GeoDiver
         output_dir = File.join(db_dir, @params['geo_db'])
         FileUtils.mkdir(output_dir) unless Dir.exist? output_dir
         compressed = File.join(output_dir, "#{@params['geo_db']}.soft.gz")
+        logger.debug("Downloading from: #{remote_dir} ==> #{compressed}")
         system "wget #{remote_dir} --output-document #{compressed}"
+        logger.debug("Uncompressing file: #{compressed.gsub('.gz', '')}")
         system "gunzip --force -c #{compressed} > #{compressed.gsub('.gz', '')}"
         compressed.gsub('.gz', '')
       end
@@ -132,6 +136,7 @@ module GeoDiver
 
       #
       def write_to_json(hash, output_json)
+        logger.debug("Writing meta data to file: #{output_json}")
         File.open(output_json, 'w') { |f| f.puts hash.to_json }
       end
 
@@ -139,6 +144,8 @@ module GeoDiver
       def soft_link_meta_json_to_public_dir
         public_meta_json = File.join(public_dir, 'GeoDiver/DBs/',
                                      "#{@params['geo_db']}.json")
+        logger.debug("Creating a Soft Link from: #{@meta_json} ==>" \
+                     " #{public_meta_json}")
         return if File.exist? public_meta_json
         FileUtils.ln_s(@meta_json, public_meta_json)
       end
@@ -155,7 +162,9 @@ module GeoDiver
         "Rscript #{File.join(GeoDiver.root, 'RCore/downloadGeo.R')}" \
         " --accession #{@params['geo_db']}" \
         " --geodbpath #{File.join(geo_db_dir, "#{@params['geo_db']}.soft.gz")}"\
-        " --outrdata  #{File.join(geo_db_dir, "#{@params['geo_db']}.Rdata")}"
+        " --outrdata  #{File.join(geo_db_dir, "#{@params['geo_db']}.Rdata")}" \
+        " && echo 'Finished creating Rdata file:" \
+        " #{File.join(geo_db_dir, "#{@params['geo_db']}.Rdata")}'"
       end
     end
   end

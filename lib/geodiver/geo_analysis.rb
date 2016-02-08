@@ -48,6 +48,7 @@ module GeoDiver
 
       #
       def assert_geo_db_present
+        logger.debug('Asserting GEO db is present.')
         return unless @params['geo_db'].nil? || @params['geo_db'].empty?
         fail ArgumentError, 'No GEO database provided.'
       end
@@ -57,6 +58,7 @@ module GeoDiver
         @uniq_time = Time.new.strftime('%Y-%m-%d_%H-%M-%S_%L-%N').to_s
         @run_dir = File.join(users_dir, @user.info['email'], @params['geo_db'],
                              @uniq_time)
+        logger.debug("Creating Run Directory: #{@run_dir}")
         FileUtils.mkdir_p(@run_dir)
       end
 
@@ -64,6 +66,7 @@ module GeoDiver
       def run_dgea
         return unless @params['dgea'] == 'on'
         load_geo_db.join # wait until geo db has been loaded
+        logger.debug("Running CMD: #{dgea_cmd}")
         system(dgea_cmd)
         assert_dgea_output
       end
@@ -90,6 +93,7 @@ module GeoDiver
       def soft_link_output_dir_to_public_dir
         public_user_dir = File.join(public_dir, 'GeoDiver/Users',
                                     @user.info['email'], @params['geo_db'])
+        logger.debug("Creating a Soft Link: #{@run_dir} ==> #{public_user_dir}")
         FileUtils.mkdir_p(public_user_dir) unless Dir.exist? public_user_dir
         FileUtils.ln_s(@run_dir, public_user_dir)
       end
