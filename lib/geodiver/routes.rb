@@ -66,12 +66,12 @@ module GeoDiver
 
     get '/analyse' do
       redirect '/auth/google_oauth2' if session[:uid].nil?
-      slim :analyse
+      slim :analyse, layout: :app_layout
     end
 
     get '/my_results' do
       redirect '/auth/google_oauth2' if session[:uid].nil?
-      slim :my_results
+      slim :my_results, layout: :app_layout
     end
 
     post '/load_geo_db' do
