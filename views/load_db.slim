@@ -40,13 +40,86 @@
         .collapsible-body.adv_param_collapsible
           .row
             .input-field.col.s12
-              span.light-blue-text.text-darken-3.heading2 Analyses
               p
                 input#DGEA_input checked="checked" name="dgea" type="checkbox"
-                label for="DGEA_input"  Differential Gene Expression Analysis
+                label.light-blue-text.text-darken-3 style="font-size:1.3rem;" for="DGEA_input"  Differential Gene Expression Analysis
+            #DGEAparams.col.s12
+              span.grey-text  style="padding-left:2.75rem" Number of Top Genes
+              .row
+                .col.s4 style="padding-left:3rem"
+                  p.range-field
+                    input#no_of_top_genes name="number_top_genes" min="50" max="300" value="250" type="range" /
+              .row
+                .col.s12
+                  p
+                    input#heatmap checked="checked" name="heatmap" type="checkbox"
+                    label.light-blue-text.text-darken-3 for="heatmap"  Heatmap
+                #heatmap_params.row
+                  .input-field.col.s4
+                    select name="heatmap_distance_method"
+                      option value="euclidean" selected=""   Euclidean
+                      option value="maximum"  Maximum
+                      option value="manhattan"  Manhattan
+                      option value="canberra"  Canberra
+                      option value="binary"  Binary
+                      option value="minkowski"  Minkowski
+                    label Distance method
+                  .input-field.col.s4
+                    select name="heatmap_clustering_method"
+                      option value="Centroid"   Centroid
+                      option value="Median"  Median
+                      option value="Mcquitty"  Mcquitty
+                      option value="Average"  Average
+                      option value="Complete" selected="" Complete
+                      option value="Single"  Single
+                      option value="Ward.D"  Ward.D
+                      option value="Ward.D2"  Ward.D2
+                    label Clustering method
+                  .clearfix style="padding-bottom:1rem;"
+                  .col.s4
+                    span.grey-text  Number of Genes to show in the Heatmap
+                    p.range-field
+                      input#no_of_top_genes name="heatmap_rows" min="50" max="200" value="100" type="range" /
+
+                  .col.s12
+                    .switch 
+                      label
+                        | Off
+                        input name="cluster_by_genes" type="checkbox" checked="" /
+                        span.lever
+                        | Cluster by genes
+                  .clearfix style="padding-bottom:1rem;"
+                  .col.s12
+                    .switch 
+                      label
+                        | Off
+                        input name="cluster_by_samples" type="checkbox" checked="" /
+                        span.lever
+                        | Cluster by Samples
+              .row
+                .col.s12
+                  p
+                    input#volcano checked="checked" name="volcano" type="checkbox"
+                    label.light-blue-text.text-darken-3 for="volcano"  Volcano Plot
+                #volcano_params.row
+                  .input-field.col.s4
+                    select name="volcano_pValue_cutoff"
+                      option value="Bonferroni"  Bonferroni
+                      option value="FDR" selected=""  FDR
+                      option value="BH"  BH
+                      option value="BY"  BY
+                      option value="Hommel"  Hommel
+                      option value="Hochberg"  Hochberg
+                      option value="Holm"  Holm
+                      option value="None"  None
+                    label P value cut off
+            .input-field.col.s12
               p
                 input#GSEA_input checked="checked" name="gsea" type="checkbox"
-                label for="GSEA_input"  Gene Set Enrichment Analysis
+                label.light-blue-text.text-darken-3 style="font-size:1.3rem;" for="GSEA_input"  Gene Set Enrichment Analysis
+          .clearfix style="padding-bottom:1rem;"
+
+            #GSEAparams.col.s12
     button#analyse_geo_btn.btn.waves-effect.waves-light.light-blue.accent-4.btn-large.right.analyse_geo_btn type="submit" value="input" 
       | Analyse GEO Dataset
   .clearfix style="padding-bottom:1rem;"

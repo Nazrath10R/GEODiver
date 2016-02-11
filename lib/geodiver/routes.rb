@@ -1,3 +1,4 @@
+require 'json'
 require 'omniauth'
 require 'omniauth-google-oauth2'
 require 'sinatra/base'
@@ -83,9 +84,23 @@ module GeoDiver
 
     post '/analyse' do
       redirect '/auth/google_oauth2' if session[:uid].nil?
-      GeoAnalysis.init(params, session[:user])
+      @run_uniq_id = GeoAnalysis.init(params, session[:user])
       @results_link = GeoAnalysis.run
       slim :results, layout: false
+    end
+
+    post '/gene_expression_url' do
+      redirect '/auth/google_oauth2' if session[:uid].nil?
+      content_type :json
+      jsonfile = GeoAnalysis.get_expression_json(params)
+      json = IO.read(jsonfile)
+      puts json
+      json
+    end
+
+    post '/interaction' do
+      redirect '/auth/google_oauth2' if session[:uid].nil?
+      GeoAnalysis.create_interactions(params)
     end
 
     get '/auth/:provider/callback' do
@@ -98,13 +113,12 @@ module GeoDiver
     get '/logout' do
       session[:uid] = nil
       session[:user] = nil
-      # TODO remove user files from public dir
+      # TODO: remove user files from public dir
       redirect '/'
     end
 
     get '/auth/failure' do
-      content_type 'text/plain'
-      request.env['omniauth.auth'].to_hash.inspect
+      redirect '/'
     end
 
     # This error block will only ever be hit if the user gives us a funny

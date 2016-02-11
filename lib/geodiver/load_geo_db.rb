@@ -160,10 +160,10 @@ module GeoDiver
 
       def load_geo_db_cmd
         geo_db_dir = File.join(db_dir, @params['geo_db'])
-        "Rscript #{File.join(GeoDiver.root, 'RCore/downloadGeo.R')}" \
+        "Rscript #{File.join(GeoDiver.root, 'RCore/download_GEO.R')}" \
         " --accession #{@params['geo_db']}" \
         " --geodbpath #{File.join(geo_db_dir, "#{@params['geo_db']}.soft.gz")}"\
-        " --outrdata  #{File.join(geo_db_dir, "#{@params['geo_db']}.Rdata")}" \
+        " --outrdata  #{File.join(geo_db_dir, "#{@params['geo_db']}.RData")}" \
         " && echo 'Finished creating Rdata file:" \
         " #{File.join(geo_db_dir, "#{@params['geo_db']}.Rdata")}'"
       end
