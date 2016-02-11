@@ -3,7 +3,7 @@
 # Filename      : DGEA.R                                   #
 # Authors       : IsmailM, Nazrath, Suresh, Marian, Anisa  #
 # Description   : Differential Gene Expression Analysis    #
-# Rscript dgea.R --accession GDS5093 --dbrdata ~/Desktop/GDS5093.rData --rundir ~/Desktop/ --factor "disease.state" --popA "Dengue Hemorrhagic Fever,Convalescent,Dengue Fever" --popB "healthy control" --popname1 "Dengue" --popname2 "Normal" --analyse "Boxplot,Volcano,PCA,Heatmap,Clustering" --topgenecount 250 --foldchange 0.3 --thresholdvalue 0.005 --distance "euclidean" --clustering "average" --heatmaprows 100 --dendrow TRUE --dendcol TRUE --adjmethod fdr --dev TRUE
+# Rscript overview.R --accession GDS5093 --dbrdata ~/Desktop/GDS5093.rData --rundir ~/Desktop/dgea/ --factor "disease.state" --popA "Dengue Hemorrhagic Fever,Convalescent,Dengue Fever" --popB "healthy control" --popname1 "Dengue" --popname2 "Normal" --analyse "Boxplot,Volcano,PCA,Heatmap,Clustering" --distance "euclidean" --clustering "average" --dev TRUE
 # ---------------------------------------------------------#
 
 #############################################################################
@@ -17,10 +17,7 @@ suppressMessages(library("dendextend"))    # Dendogram extended functionalities
 suppressMessages(library("DMwR"))          # Outlier Prediction for clustering
 suppressMessages(library("GEOquery"))      # GEO dataset Retrieval
 suppressMessages(library("ggplot2"))       # Graphs designing
-suppressMessages(library("gplots"))        # Graphs designing
 suppressMessages(library("jsonlite"))      # Convert R object to JSON format
-suppressMessages(library("limma"))         # Differencial Gene Expression Analysis
-suppressMessages(library("pheatmap"))      # Heatmap Generating
 suppressMessages(library("plyr"))          # Splitting, Applying and Combining Data
 suppressMessages(library("RColorBrewer"))  # Import Colour Pallete
 suppressMessages(library("reshape2"))      # Prepare dataset for ggplot
@@ -59,30 +56,11 @@ parser <- add_argument(parser, "--popname1",
 parser <- add_argument(parser, "--popname2",
                        help = "name for Group B")
 
-# Toptable
-parser <- add_argument(parser, "--topgenecount",
-                       help = "Number of top genes to be used")
-parser <- add_argument(parser, "--adjmethod",
-                       help = "Adjust P-values for Multiple Comparisons")
-
-# Heatmap
-parser <- add_argument(parser, "--heatmaprows",
-                       help = "Number of genes show in the heatmap")
-parser <- add_argument(parser, "--dendrow",
-                       help = "Boolean value for display dendogram for Genes")
-parser <- add_argument(parser, "--dendcol",
-                       help = "Boolean value for display dendogram for Samples")
 # Clustering
 parser <- add_argument(parser, "--distance",
                        help = "Distance measurement methods")
 parser <- add_argument(parser, "--clustering",
                        help = "HCA clustering methods")
-
-# Volcano plot Parameters
-parser <- add_argument(parser, "--foldchange",
-                       help = "fold change cut off")
-parser <- add_argument(parser, "--thresholdvalue",
-                       help = "threshold value cut off")
 
 # allow arguments to be run via the command line
 argv   <- parse_args(parser)
@@ -105,22 +83,6 @@ pop.name2       <- argv$popname2
 pop.colour1     <- "#b71c1c"  # Red
 pop.colour2     <- "#0d47a1"  # Blue
 
-# Toptable
-topgene.count     <- as.numeric(argv$topgenecount)
-toptable.sortby   <- "p"
-adjmethod_options <- c("holm", "hochberg", "hommel", "bonferroni", "BH", "BY",
-                       "fdr", "none")
-if (argv$adjmethod %in% adjmethod_options) {
-  adj.method <- argv$adjmethod
-} else {
-  adj.method <- "fdr"
-}
-
-# Heatmap
-heatmap.rows <- as.numeric(argv$heatmaprows)
-dendrow      <- as.logical(argv$dendrow)
-dendcol      <- as.logical(argv$dendcol)
-
 # Clustering
 distance_options <- c("euclidean", "maximum", "manhattan", "canberra",
                       "binary", "minkowski")
@@ -137,10 +99,6 @@ if (argv$clustering %in% clustering_options){
 } else {
   clust.method <- "average"
 }
-
-# Volcano plot Parameters
-fold.change     <- as.numeric(argv$foldchange)
-threshold.value <- as.numeric(argv$thresholdvalue)
 
 if (!is.na(argv$dev)) {
   isdebug <- argv$dev
@@ -161,6 +119,23 @@ scalable <- function(X) {
   return (logc)
 }
 
+# Boxplot
+samples.boxplot <- function(data, pop.colours, pop.names, path){
+  boxplot <- ggplot(data) + geom_boxplot(aes(x = Var2, y = value, colour = Groups), outlier.shape = NA) + theme(axis.text.x = element_text(angle = 70, hjust = 1), legend.position = "right")+ labs(x = "Samples", y = "Expression Levels") + scale_color_manual(name = "Groups", values = pop.colours, labels = pop.names)
+  # compute lower and upper whiskers
+  ylim1 = boxplot.stats(data$value)$stats[c(1, 5)]
+
+  # scale y limits based on ylim1
+  boxplot <- boxplot + coord_cartesian(ylim = ylim1*1.05)
+
+  filename <- paste(path, "boxplot.png", sep = "")
+  ggsave(filename, plot = boxplot, width = 8, height = 4)
+
+  if(isdebug){
+    print("Boxplot has been produced")
+  }
+}
+
 # Calculate Outliers Probabilities/ Dissimilarities
 outlier.probability <- function(X, dist.method = "euclidean", clust.method = "average"){
   # Rank outliers using distance and clustering parameters
@@ -173,113 +148,97 @@ outlier.probability <- function(X, dist.method = "euclidean", clust.method = "av
   return(o$prob.outliers)
 }
 
-find.toptable <- function(X, newpclass, toptable.sortby, topgene.count){
-  design  <- model.matrix(~0 + newpclass)
+# TODO: Add Documentation
+# Clustering dendogram
+clustering <- function(X, dist.method = "euclidean", clust.method = "average", exp){
+  dendo  <-  hclust(dist(t(X), method = dist.method), method = clust.method)
 
-  # plots linear model for each gene and estimate fold changes and standard errors
-  fit     <- lmFit(X, design)
+  # Factor types
+  factor <- as.factor(exp[,"factor.type"])
+  population <- as.factor(exp[,"population.colour"])
 
-  # set contrasts for two groups
-  contrasts <- makeContrasts(contrasts = "newpclassGroup1-newpclassGroup2",
-                             levels = design)
+  names(factor) <- exp$Sample
+  names(population ) <- exp$Sample
 
-  fit <- contrasts.fit(fit, contrasts)
+  outliers <- outlier.probability(X, dist.method, clust.method)
 
-  # empirical Bayes smoothing to standard errors
-  fit <- eBayes(fit, proportion = 0.01)
+  factor.cmap <- makecmap(as.numeric(factor), n = length(levels(factor)), colFn = colorRampPalette(c('black', 'green')))
+  population.cmap <- makecmap(as.numeric(factor), n = length(levels(population)), colFn = colorRampPalette(c('black', 'blue')))
+  outliers.cmap <- makecmap(outliers, n = 10, colFn = colorRampPalette(c('black', 'red')))
 
-  # Create top Table
-  toptable <- topTable(fit,adjust.method = adj.method, sort.by = toptable.sortby, 
-                       number = topgene.count)
-  if(isdebug){
-    print(paste("TopTable has been produced", 
-          "for", topgene.count, "genes with the cut-off method:", adj.method))
-  }
-  return(toptable)
-}
+  matrix <- data.frame(Factor =  factor, Groups = population,
+                       Dissimilarity = cmap( outliers, outliers.cmap))
 
-# Heatmap
-heatmap <- function(X.matix, exp, heatmap.rows = 100, dendogram.row, dendogram.col,
-                    dist.method, clust.method, path){
+  jColors <- with(matrix, data.frame(factors = levels(Factor),
+                                     color = I(brewer.pal(nlevels(Factor), name = 'Dark2'))))
 
-  col.pal <- colorRampPalette(rev(RColorBrewer::brewer.pal(11, "RdYlGn")))(100)
+  matrix <- within(matrix,{
+    Factor = jColors$color[matrix$Factor]
+  })
 
-  # Column dendogram
-  if (dendogram.col == TRUE){
-    hc <- hclust(dist(t(X.matix), method = dist.method), method = clust.method)
+  filename <- paste(run.dir, "clustering.png", sep = "")
+  CairoPNG(file = filename, width = 1200, height = 700, xlab = "Samples")
 
-    outliers <- outlier.probability(X.matix, dist.method, clust.method)
+  factor.cmap$colors         <- jColors$color
+  factor.cmap$breaks         <- jColors$factors
+  factor.cmap$include.lowest <- TRUE
 
-    ann.col <- data.frame(Population    = exp[, "population"],
-                          Factor        = exp[, "factor.type"],
-                          Dissimilarity = outliers)
-    column.gap <- 0
-  } else {
-    hc <- FALSE
+  population.cmap$colors         <- levels(population)
+  population.cmap$breaks         <- c("Group1","Group2","")
+  population.cmap$include.lowest <- TRUE
 
-    ann.col <- data.frame(Population = exp[, "population"],
-                          Factor     = exp[, "factor.type"])
-    column.gap <- length( (which(ann.col[, "Population"] == "Group1") == T) )
-  }
+  par(mar = c(6.5,6,4,3)+0.1)  # make space for color keys
+  dendromat(dendo, matrix, height = 0.3, ylab = 'Distance')
 
-  rownames(ann.col) <- exp[, "Sample"]
+  vkey(factor.cmap, 'Factors', y = 0.9, stretch = 3 )
+  vkey(population.cmap, 'Groups', y = 0.6, stretch = 3)
+  vkey(outliers.cmap, 'Dissimilarity', y = 0.0, stretch =2)
 
-  filename <- paste(path, "dgea_heatmap.svg", sep = "")
-  CairoSVG(file = filename)
-
-  pheatmap(X.matix[1:heatmap.rows, ],
-           cluster_row    = dendogram.row,
-           cluster_cols   = hc,
-           annotation_col = ann.col,
-           legend         = TRUE,
-           color          = col.pal,
-           fontsize       = 6.5,
-           fontsize_row   = 3.5,
-           fontsize_col   = 3.5,
-           gaps_col       = column.gap)
   dev.off()
 
   if (isdebug) {
-    print(paste("Heatmap has been created"))        
-    if (dendrow==TRUE) { print("with a dendogram for rows") }
-    if (dendcol==TRUE) { print("and a dendogram for columns") }
+    print(paste("Clustering has been performed", "with distance method:",
+                argv$distance, "and clustering method:", argv$clustering))
   }
 }
 
-# Apply Bonferroni cut-off as the default thresold value
-volcanoplot <- function(toptable, fold.change, t = 0.05 / length(gene.names), path){
+# Principal Component Analysis
+get.pcdata <- function(Xpca){
+  s <- summary(Xpca)
 
-  # Highlight genes that have an logFC greater than fold change
-  # a p-value less than Bonferroni cut-off
-  toptable$Significant <- as.factor(abs(toptable$logFC)  > fold.change &
-                                    toptable$P.Value < t)
+  exp.var <- s$importance[2, ] * 100 # Explained Variance in percentages
+  cum.var <- s$importance[3, ] * 100 # Cumulative Variance in percentages
+  pcnames <- names(exp.var)  # PC names
 
-  # Construct the plot object
-  vol <- ggplot(data = toptable, aes(x = toptable$logFC, y = -log10(toptable$P.Value), colour = Significant)) +
-      geom_point(alpha = 0.4, size = 1.75)  + xlim(c(-max(toptable$logFC) - 0.1, max(toptable$logFC) + 0.1)) + ylim(c(0, max(-log10(toptable$P.Value)) + 0.5)) + xlab("log2 fold change") + ylab("-log10 p-value")
+  names(exp.var) <- NULL
+  names(cum.var) <- NULL
 
-  # File saving
-  filename <- paste(path, "dgea_volcano.png", sep = "")
-  ggsave(filename, plot = vol, height = 6, width = 6)
+  results <- list(pcnames = pcnames, expVar = exp.var, cumVar = cum.var)
 
-  if(isdebug){
-    print(paste("Volcanoplot has been produced", 
-          "for a foldchange of:", fold.change, "and threshold of:", threshold.value))
-  }
+  return(results)
 }
 
-get.volcanodata <- function(toptable){
-  vol.list <- list( genes = toptable$ID,
-                    logFC = round(toptable$logFC, 3),
-                    pVal  = -log10(toptable$P.Value))
-  return(vol.list)
+get.pcplotdata <- function(Xpca, populations){
+  Xscores <- Xpca$x
+
+  rownames(Xscores) <- NULL
+  cols <- colnames(Xscores)
+
+  # TODO: Add Documentation
+  Xscores <- lapply(1:nrow(Xscores),
+                    function(y) split(Xscores[, y], populations))
+  names(Xscores) <- cols
+
+  if (isdebug) { print("PCA has been calculated") }
+  return(unlist(Xscores, recursive = FALSE))
 }
+
 
 #############################################################################
 #                        Load GEO Dataset to Start Analysis                 #
 #############################################################################
 
-if (isdebug){
+if(isdebug){
   print("GeoDiver is starting")
   print("Libraries have been loaded")
 }
@@ -307,7 +266,7 @@ if (scalable(X)) {
   X <- log2(X)
 }
 
-if (isdebug) {
+if(isdebug){
   print(paste("Analyzing the factor", factor.type))
   print(paste("for", pop.name1,":", argv$popA))
   print(paste("against", pop.name2,":", argv$popB))
@@ -352,58 +311,38 @@ data <- within(melt(X), {
   Groups     <- expression.info[Var2, "population.colour"]
 })
 
-# Created a new Phenotype class
-newpclass           <- expression.info$population
-names(newpclass)    <- expression.info$Sample
-
 if (isdebug) { print("Factors and Populations have been set") }
 
 #############################################################################
-#                        Function Calling                                   #
+#                        Function Calling                                 #
 #############################################################################
 
 json.list <- list()
 
-# Toptable
-toptable <- find.toptable(X, newpclass, toptable.sortby, topgene.count)
-
-# Adding to JSON file
-temp.toptable <- toptable
-names(temp.toptable) <- NULL
-json.list <- append(json.list, list(tops = temp.toptable))
-
-# Filter toptable data from X
-X.toptable <- X[as.numeric(rownames(toptable)), ]
-
-# save toptable expression data
-filename <- paste(run.dir,"dgea_toptable.RData", sep = "")
-save(X.toptable, expression.info, file = filename)
-
-# save tab delimited
-filename <- paste(run.dir, "dgea_toptable.tsv", sep = "")
-write.table(toptable, filename, col.names=NA, sep = "\t" )
-
-if(isdebug){
-  print(paste("Analysis to be performed:", argv$analyse))
+if ("Boxplot" %in% analysis.list){
+  samples.boxplot(data, c(pop.colour1, pop.colour2),
+                  c(pop.name1, pop.name2), path = run.dir)
 }
 
-if ("Volcano" %in% analysis.list){
-    toptable.all <- find.toptable(X, newpclass, toptable.sortby,
-                                  length(gene.names))
+if ("PCA" %in% analysis.list){
+  Xpca <- prcomp(t(X), scale = TRUE)
 
-    volcanoplot(toptable.all, fold.change, threshold.value, run.dir)
+  # PC individual and cumulative values
+  pcdata <- get.pcdata(Xpca)
+  json.list <- append(json.list, list(pc = pcdata))
 
-    # save volcanoplot top data as JSON
-    volcanoplot.data <- get.volcanodata(toptable)
-    json.list <- append(json.list, list(vol = volcanoplot.data))
+  # PC scatter plot
+  pcplotdata <- get.pcplotdata(Xpca, expression.info[, "population"])
+
+  # adding both data to the json list
+  json.list <- append(json.list, list(pcdata = pcplotdata))
 }
 
-if ("Heatmap" %in% analysis.list){
-    heatmap(X.toptable, expression.info, heatmap.rows = heatmap.rows,
-            dendrow, dendcol, dist.method, clust.method, run.dir)
+if ("Clustering" %in% analysis.list){
+  clustering(X, dist.method, clust.method, expression.info)
 }
 
-if (length(json.list) != 0){
-    filename <- paste(run.dir, "dgea_data.json", sep = "")
-    write(toJSON(json.list, digits=I(4)), filename )
+if (length(json.list) != 0) {
+  filename <- paste(run.dir, "data.json", sep = "")
+  write(toJSON(json.list, digits=I(4)), filename )
 }
