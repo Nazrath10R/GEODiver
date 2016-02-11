@@ -27,6 +27,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency('capybara', '~> 2.4', '>= 2.4.4')
   spec.add_development_dependency 'w3c_validators', '~>1.1'
 
+  spec.add_dependency 'passenger', '~>5.0'
   spec.add_dependency 'omniauth', '~>1.3'
   spec.add_dependency 'omniauth-google-oauth2', '~>0.3'
   spec.add_dependency 'sinatra', '~>1.4'
