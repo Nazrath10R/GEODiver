@@ -33,6 +33,7 @@
                         <li class="collection-item avatar" onclick="location.href=&#39;/logout&#39;;" style="cursor: pointer;"><i class="material-icons circle light-blue accent-3"> power_settings_new</i><span class="title">Log Out</span></li>
                     </ul>
                 </li><a class="button-collapse" data-activates="nav-mobile" href="http://localhost:9292/analyse#"><i class="material-icons">menu</i></a></ul>
+
             <ul class="side-nav" id="nav-mobile" style="left: -250px;">
                 <li><a href="http://localhost:9292/profile"> Login</a></li>
             </ul>
@@ -338,7 +339,7 @@
                                             </p>
                                         </div>
                                         <div class="col s12" id="DGEAparams"><span class="grey-text" style="padding-left:2.75rem">Number of Top Genes</span>
-                                            <a class="tooltipped" data-position="right" data-delay="40" data-tooltip="Number of most significantly expressed Genes to be displayed"> <i class="material-icons">info_outline</i></a>
+                                            <a class="tooltipped" data-position="right" data-delay="40" data-tooltip="Number of most significantly expressed Genes to be displayed"> <i class="material-icons light-blue-text" style = "font-size:1.2rem">info_outline</i></a>
                                             <div class="row">
                                                 <div class="col s4" style="padding-left:3rem">
                                                     <p class="range-field">
@@ -388,7 +389,7 @@
                                                         <div class="switch">
                                                             <label>Off
                                                                 <input checked="" name="cluster_by_genes" type="checkbox"><span class="lever"></span>Cluster Genes</label>
-                                                            <a class="tooltipped" data-position="right" data-delay="40" data-tooltip="In the Heatmap, genes will be grouped together"> <i class="material-icons">info_outline</i></a>
+                                                            <a class="tooltipped" data-position="right" data-delay="40" data-tooltip="In the Heatmap, genes will be grouped together"> <i class="material-icons light-blue-text" style = "font-size:1.2rem">info_outline</i></a>
                                                         </div>
                                                     </div>
                                                     <div class="clearfix" style="padding-bottom:1rem;"></div>
@@ -396,7 +397,7 @@
                                                         <div class="switch">
                                                             <label>Off
                                                                 <input checked="" name="cluster_by_samples" type="checkbox"><span class="lever"></span>Cluster Samples</label>
-                                                            <a class="tooltipped" data-position="right" data-delay="40" data-tooltip="In the Heatmap, samples will be grouped together"> <i class="material-icons">info_outline</i></a>
+                                                            <a class="tooltipped" data-position="right" data-delay="40" data-tooltip="In the Heatmap, samples will be grouped together"> <i class="material-icons light-blue-text" style = "font-size:1.2rem">info_outline</i></a>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -408,7 +409,7 @@
                                             <div class="switch">
                                                 <label>Toptable
                                                     <input checked="" name="cluster_by_genes" type="checkbox"><span class="lever"></span>Complete dataset</label>
-                                                <a class="tooltipped" data-position="right" data-delay="40" data-tooltip="How much data should the clustering Dendogram for the Heatmap capture"> <i class="material-icons">info_outline</i></a>
+                                                <a class="tooltipped" data-position="right" data-delay="40" data-tooltip="How much data should the clustering Dendogram for the Heatmap capture"> <i class="material-icons light-blue-text" style = "font-size:1.2rem">info_outline</i></a>
                                             </div>
                                         </div>
                                         <div class="clearfix" style="padding-top:2rem;"></div>
@@ -445,13 +446,13 @@
                                         <p>
                                             <input name="group1" type="radio" id="test1" />
                                             <label for="test1">Exp vs Exp</label>
-                                            <a class="tooltipped" data-position="right" data-delay="40" data-tooltip="Experimental against Experimental"> <i class="material-icons">info_outline</i></a>
+                                            <a class="tooltipped" data-position="right" data-delay="40" data-tooltip="Experimental against Experimental"> <i class="material-icons light-blue-text" style = "font-size:1.2rem">info_outline</i></a>
                                         </p>
                                         <p>
                                             <input name="group1" type="radio" id="test2" />
                                             <label for="test2">Exp vs Ctrl</label>
-                                            <a class="tooltipped" data-position="right" data-delay="40" data-tooltip="Experimental against Control"> <i class="material-icons">info_outline</i></a>
-                                        </p>
+                                            <a class="tooltipped" data-position="right" data-delay="40" data-tooltip="Experimental against Control"> <i class="material-icons light-blue-text" style = "font-size:1.2rem">info_outline</i></a>
+                                        </p> 
                                         <div class="clearfix" style="padding-bottom:2rem;"></div>
                                     </div>
                                     <div class="col s12 offset-s1">
@@ -465,7 +466,7 @@
                                                 <input type="checkbox">
                                                 <span class="lever"></span> Group 2
                                             </label>
-                                            <a class="tooltipped" data-position="right" data-delay="50" data-tooltip="Pick the Control group"> <i class="material-icons">info_outline</i></a>
+                                            <a class="tooltipped" data-position="right" data-delay="50" data-tooltip="Pick the Control group"> <i class="material-icons light-blue-text" style = "font-size:1.2rem">info_outline</i></a>
                                         </div>
                                     </div>
                                     <div class="clearfix" style="padding-bottom:2rem;"></div>
@@ -482,11 +483,13 @@
                                         </select>
                                         <label>Gene Sets</label>
                                     </div>
-                                    <div class="clearfix" style="padding-bottom:2.5rem;"></div>
+                                    <div class="clearfix" style="padding-bottom:3rem;"></div>
                                 </div>
                                 <div class="clearfix" style="padding-bottom:1rem;">
                                     <div class="col s12" id="GSEAparams"></div>
                                 </div>
+                                <div class="clearfix" style="padding-top:2rem;"></div>
+
                 </div>
                 </li>
                 </ul>
