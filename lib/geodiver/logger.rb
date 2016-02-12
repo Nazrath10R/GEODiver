@@ -3,7 +3,7 @@ require 'logger'
 module GeoDiver
   # Extend stdlib's Logger class for custom initialization and log format.
   class Logger < Logger
-    def initialize(dev, verbose = false)
+    def initialize(dev, verbose = true)
       super dev
       self.level     = verbose ? DEBUG : INFO
       self.formatter = Formatter.new

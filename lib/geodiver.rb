@@ -24,7 +24,7 @@ module GeoDiver
     end
 
     def logger
-      @logger ||= Logger.new(STDOUT, verbose?)
+      @logger ||= Logger.new(STDOUT)
     end
 
     # Setting up the environment before running the app...
