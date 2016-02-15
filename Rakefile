@@ -5,7 +5,7 @@ require 'rspec/core/rake_task'
 task default: [:build]
 
 desc 'Builds and installs'
-task install: [:build] do
+task install: [:installRdependencies, :build] do
   require_relative 'lib/genevalidatorapp/version'
   sh "gem install ./genevalidatorapp-#{GeneValidatorApp::VERSION}.gem"
 end
@@ -13,6 +13,11 @@ end
 desc 'Runs tests and builds gem (default)'
 task build: [:test] do
   sh 'gem build genevalidatorapp.gemspec'
+end
+
+desc 'Install R dependencies'
+task :installRdependencies do 
+  sh 'Rscript RCore/Installations.R'
 end
 
 task test: :spec
