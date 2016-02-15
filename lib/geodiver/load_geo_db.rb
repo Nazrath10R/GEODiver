@@ -77,8 +77,8 @@ module GeoDiver
         FileUtils.mkdir(output_dir) unless Dir.exist? output_dir
         compressed = File.join(output_dir, "#{@params['geo_db']}.soft.gz")
         logger.debug("Downloading from: #{remote_dir} ==> #{compressed}")
-        system "wget #{remote_dir} --output-document #{compressed} " \
-               '>/dev/null 2>&1'
+        system "wget #{remote_dir} --output-document #{compressed}" \
+               ' >/dev/null 2>&1'
         logger.debug("Uncompressing file: #{compressed.gsub('.gz', '')}")
         system "gunzip --force -c #{compressed} > #{compressed.gsub('.gz', '')}"
         compressed.gsub('.gz', '')
