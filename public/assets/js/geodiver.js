@@ -109,11 +109,6 @@ if (!GD) {
     $('#loading_modal').openModal({ dismissible: false});
     var resultId = currentRow.closest('.results_card').data('results_id');
     var geoDb = currentRow.closest('.results_card').data('geo_db');
-    console.log(geoDb);
-    console.log(resultId);
-    console.log(geneId);
-    console.log('dffdfd');
-
     $.ajax({
       type: 'POST',
       url: '/gene_expression_url',
@@ -136,21 +131,13 @@ if (!GD) {
     $('#loading_modal').openModal({ dismissible: false});
     var resultId = currentRow.closest('.results_card').data('results_id');
     var geoDb = currentRow.closest('.results_card').data('geo_db');
-    console.log(geoDb);
-    console.log(resultId);
-    console.log(pathId);
-
     $.ajax({
       type: 'POST',
       url: '/interaction',
       data: {path_id: pathId, result_id: resultId, geo_db: geoDb},
       success: function(response) {
-        console.log(response);
         currentRow.addClass('parent');
-        currentRow.after('<tr class="child" id="'+ pathId + 
-                         'ChildRow"><td colspan="8"><div id="' + pathId + 'Plot">' +
-                         '<p>hey</p>' +
-                         '</div></td></tr>');
+        currentRow.after(response);
         $('#loading_modal').closeModal();
       },
       error: function(e, status) {
@@ -181,9 +168,10 @@ if (!GD) {
         $('#principle_plot').empty();
         var x = $('select[name=PCoption1]').val();
         var y = $('select[name=PCoption2]').val();
+        var z = $('select[name=PCoption3]').val();
         var jsonFile = $('#overview').data("overview-json");
         $.getJSON(jsonFile, function(json) {
-          GD.createPCAScatterPlot(json.pcdata, x, y);
+          GD.createPCAScatterPlot(json.pcdata, x, y, z);
         });
       }
     });
@@ -196,7 +184,7 @@ if (!GD) {
     var jsonFile = $('#overview').data("overview-json");
     $.getJSON(jsonFile, function(json) {
       pcaPlot = GD.createPCAPLOT(json.pc.cumVar, json.pc.expVar, json.pc.pcnames);
-      pcaScatterPlot = GD.createPCAScatterPlot(json.pcdata, 'PC1', 'PC2');
+      pcaScatterPlot = GD.createPCAScatterPlot(json.pcdata, 'PC1', 'PC2', 'PC3');
       GD.initialiatizePcaScatterPlot(json.pc.pcnames);
       $('select').material_select();
     });
@@ -218,19 +206,36 @@ if (!GD) {
     };
   };
 
-  GD.createPCAScatterPlot = function(pcdata, x, y) {
-    var group1 = { x: pcdata[ x + '.Group1'], y: pcdata[y + '.Group1'], type: 'scatter', mode: 'markers', name: 'Group1' };
-    var group2 = { x: pcdata[ x + '.Group2'], y: pcdata[y + '.Group2'], type: 'scatter', mode: 'markers', name: 'Group2' };
-    var data = [group1, group2];
-    var layout = { xaxis: { title: x }, yaxis: { title: y } };
+  GD.createPCAScatterPlot = function(pcdata, x, y, z) {
+    var group1, group2, data, layout, parentWidth, PCAplotGd3, pcaPlot;
+    if (typeof z === "undefined") {
+      group1 = { x: pcdata[ x + '.Group1'], y: pcdata[y + '.Group1'], text: pcdata.Group1, type: 'scatter', mode: 'markers', name: 'Group1', marker: { symbol: 'circle' } };
+      group2 = { x: pcdata[ x + '.Group2'], y: pcdata[y + '.Group2'], text: pcdata.Group2, type: 'scatter', mode: 'markers', name: 'Group2', marker: { symbol: 'square' } };
+      data = [group1, group2];
+      layout = { xaxis: { title: x }, yaxis: { title: y }};
 
-    var parentWidth = 100;
-    var PCAplotGd3 = Plotly.d3.select('#principle_plot')
-                       .style({width: parentWidth + '%',
-                              'margin-left': (100 - parentWidth) / 2 + '%'});
-    var pcaPlot = PCAplotGd3.node();
-    Plotly.newPlot(pcaPlot, data, layout);
-    return pcaPlot;
+      parentWidth = 100;
+      PCAplotGd3 = Plotly.d3.select('#principle_plot')
+                         .style({width: parentWidth + '%',
+                                'margin-left': (100 - parentWidth) / 2 + '%'});
+      pcaPlot = PCAplotGd3.node();
+      Plotly.newPlot(pcaPlot, data, layout);
+      return pcaPlot;
+
+    } else {
+      group1 = { x: pcdata[ x + '.Group1'], y: pcdata[y + '.Group1'], z: pcdata[ z + '.Group1'], text: pcdata.Group1, type: 'scatter3d', mode: 'markers', name: 'Group1', marker: { symbol: 'circle' } };
+      group2 = { x: pcdata[ x + '.Group2'], y: pcdata[y + '.Group2'], z: pcdata[ z + '.Group2'], text: pcdata.Group2, type: 'scatter3d', mode: 'markers', name: 'Group2', marker: { symbol: 'square' } };
+      data = [group1, group2];
+      layout = { xaxis: { title: x }, yaxis: { title: y }, zaxis: {title: z} };
+
+      parentWidth = 100;
+      PCAplotGd3 = Plotly.d3.select('#principle_plot')
+                         .style({width: parentWidth + '%',
+                                'margin-left': (100 - parentWidth) / 2 + '%'});
+      pcaPlot = PCAplotGd3.node();
+      Plotly.newPlot(pcaPlot, data, layout);
+      return pcaPlot;
+    }
   };
 
   GD.createPCAPLOT = function(cumVar, expVar, pcaNames) {
@@ -356,6 +361,8 @@ if (!GD) {
       $('#PCoption1').append($("<option></option>")
         .attr("value", value).text(value));
       $('#PCoption2').append($("<option></option>")
+        .attr("value", value).text(value));
+      $('#PCoption3').append($("<option></option>")
         .attr("value", value).text(value));
     });
     GD.loadPcRedrawValidation();
