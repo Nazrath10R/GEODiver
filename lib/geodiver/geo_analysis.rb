@@ -29,6 +29,7 @@ module GeoDiver
                      :db_dir
 
       def_delegators GeoDiver::LoadGeoData, :load_geo_db
+
       #
       def init(params, user)
         @user = user
@@ -44,20 +45,21 @@ module GeoDiver
         # wait until geo db has been loaded in background thread
         load_geo_db.join unless load_geo_db.nil?
         run_analysis
-        soft_link_output_dir_to_public_dir
+        compress_files
         generate_relative_results_link(@uniq_time)
       end
 
-      def get_expression_json(params)
+      def get_expression_json(params, user)
         @params = params
         assert_gene_id_present
-        run_dir = run_expression_analysis
+        run_dir = run_expression_analysis(user)
         File.join(run_dir, "dgea_#{@params[:gene_id]}.json")
       end
 
       def create_interactions(params)
         @params = params 
-        run_interaction_analysis 
+        File.join(run_interaction_analysis,
+                  "#{@params[:path_id]}.gage_pathway.multi.png")
       end
 
       private
@@ -125,7 +127,7 @@ module GeoDiver
         " --accession #{@params['geo_db']} --factor '#{@params['factor']}'" \
         " --popA '#{@params['groupa'].join(',')}'" \
         " --popB '#{@params['groupb'].join(',')}'" \
-        " --popname1 'Dengue' --popname2 'Normal'" \
+        " --popname1 'Group1' --popname2 'Group2'" \
         " --distance '#{@params['heatmap_distance_method']}'" \
         " --clustering '#{@params['heatmap_clustering_method']}'" \
         ' --dev TRUE'
@@ -150,11 +152,11 @@ module GeoDiver
         " --accession #{@params['geo_db']} --factor '#{@params['factor']}'" \
         " --popA '#{@params['groupa'].join(',')}'" \
         " --popB '#{@params['groupb'].join(',')}'" \
-        " --popname1 'Dengue' --popname2 'Normal'" \
+        " --popname1 'Group1' --popname2 'Group2'" \
         " --topgenecount #{@params['number_top_genes']} " \
-        ' --foldchange 0.3 --thresholdvalue 0.005' \
+        ' --foldchange 0 --thresholdvalue 0' \
         " --distance '#{@params['heatmap_distance_method']}'" \
-        " --clustering '#{@params['heatmap_clustering_method']}'" \
+        " --clusterby '#{@params['heatmap_clustering_method']}'" \
         " --heatmaprows #{@params['heatmap_rows']} " \
         " --adjmethod '#{@params['volcano_pValue_cutoff']}'" \
         " --dendrow #{(@params['cluster_by_genes'] == 'on')} "\
@@ -179,6 +181,11 @@ module GeoDiver
         " --popA '#{@params['groupa'].join(',')}'" \
         " --popB '#{@params['groupb'].join(',')}'" \
         " --comparisontype 'ExpVsCtrl' --genesettype 'KEGG' --geotype 'BP'" \
+        " --distance '#{@params['heatmap_distance_method']}'" \
+        " --clusterby '#{@params['heatmap_clustering_method']}'" \
+        " --heatmaprows #{@params['heatmap_rows']} " \
+        " --dendrow #{(@params['cluster_by_genes'] == 'on')} "\
+        " --dendcol #{(@params['cluster_by_samples'] == 'on')} "\
         ' --dev TRUE'
       end
 
@@ -186,16 +193,14 @@ module GeoDiver
         true
       end
 
-      def dbrdata
-        File.join(db_dir, @params['geo_db'], "#{@params['geo_db']}.RData")
+      def compress_files
+        cmd = "zip -jr '#{@run_dir}/geodiver_results.zip' '#{@run_dir}'"
+        logger.debug("Running CMD: #{cmd}")
+        system("#{cmd}")
       end
 
-      def soft_link_output_dir_to_public_dir
-        public_user_dir = File.join(public_dir, 'GeoDiver/Users',
-                                    @user.info['email'], @params['geo_db'])
-        logger.debug("Creating a Soft Link: #{@run_dir} ==> #{public_user_dir}")
-        FileUtils.mkdir_p(public_user_dir) unless Dir.exist? public_user_dir
-        FileUtils.ln_s(@run_dir, public_user_dir)
+      def dbrdata
+        File.join(db_dir, @params['geo_db'], "#{@params['geo_db']}.RData")
       end
 
       def generate_relative_results_link(uniq_time)
@@ -203,8 +208,8 @@ module GeoDiver
                   uniq_time)
       end
 
-      def run_expression_analysis
-        run_dir = File.join(users_dir, @user.info['email'], @params['geo_db'],
+      def run_expression_analysis(user)
+        run_dir = File.join(users_dir, user.info['email'], @params['geo_db'],
                             @params['result_id'])
         cmd = expression_cmd(run_dir)
         logger.debug("Running CMD: #{cmd}")
@@ -225,9 +230,15 @@ module GeoDiver
       def run_interaction_analysis
         run_dir = File.join(users_dir, @user.info['email'], @params['geo_db'],
                             @params['result_id'])
-        cmd = interaction(run_dir)
-        logger.debug("Running CMD: #{cmd}")
-        system(cmd)
+        output_file = File.join(run_dir, 
+                                "#{@params[:path_id]}.gage_pathway.multi.png")
+        unless File.exist? output_file
+          cmd = interaction(run_dir)
+          logger.debug("Running CMD: #{cmd}")
+          Dir.chdir(run_dir) { system(cmd) }
+          FileUtils.rm(File.join(run_dir, "#{@params[:path_id]}.png")) if File.exist? File.join(run_dir, "#{@params[:path_id]}.png")
+          FileUtils.rm(File.join(run_dir, "#{@params[:path_id]}.xml")) if File.exist? File.join(run_dir, "#{@params[:path_id]}.xml")
+        end
         assert_expression_output
         generate_relative_results_link(@params['result_id'])
       end
