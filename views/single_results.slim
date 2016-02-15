@@ -1,0 +1,115 @@
+.container
+  #results_section.section
+    .card.results_card data-results_id="#{params[:time]}" data-geo_db="#{params[:geo_db]}"
+      .card-content
+        span#overview.card-title.light-blue-text.text-darken-3 style=("padding-left:0;") data-overview-json="#{uri(File.join(@results_url, 'data.json'))}"
+          |  Overview (PCA, HCA, Boxplots)
+        p.section
+          span.light-blue-text.text-darken-3.heading2 Overview Boxplots 
+          img.materialboxed src="#{uri(File.join(@results_url, 'boxplot.png'))}" width="100%"
+
+        p.section
+          span.light-blue-text.text-darken-3.heading2 Principal Component Analysis
+        #PCA_plot style=("height: 500px;")
+          /! Plotly chart will be drawn inside this DIV
+        p.section
+          span.light-blue-text.text-darken-3.heading2 Principle Component Exploratory Analysis
+          form#pca_redraw
+            .row
+              .input-field.col.s12.m3
+                select#PCoption1 name='PCoption1'
+                  option disabled="" selected="" value=""  Choose your option
+                label Select the first PCA to ananlyse
+              .input-field.col.s12.m3
+                select#PCoption2 name='PCoption2'
+                  option disabled="" selected="" value=""  Choose your option
+                label Select the second PCA to ananlyse
+              .input-field.col.s12.m3
+                select#PCoption3 name='PCoption3'
+                  option disabled="" selected="" value=""  Choose your option
+                label Select the third PCA to ananlyse
+              .col.s12.m2
+                button#redraw_pca.btn.waves-effect.waves-light.light-blue.accent-4.btn-large type="submit" value="redraw"
+                  | Redraw Plot
+          .clearfix
+          #principle_plot style=("height: 500px;")
+        / p.section
+        /   span.light-blue-text.text-darken-3.heading2 Hierarchical Clustering Analysis
+      .card-action
+        span.card-title.light-blue-text.text-darken-3 style=("padding-left:0;")  Results
+        .row
+          .col.s12
+            ul#results_tabs.tabs
+              li.tab.col.s6
+                a#DGEA_tab.light-blue-text.text-darken-3.heading2 href="#DGEA"  Differential Gene Expression Analysis
+              li.tab.col.s6
+                a.light-blue-text.text-darken-3.heading2 href="#GSEA"  Gene Set Enrichment Analysis
+              .indicator.blue style="z-index:1"
+          #DGEA.col.s12 data-dgea-json="#{uri(File.join(@results_url, 'dgea_data.json'))}"
+            p.section
+              span.light-blue-text.text-darken-3.heading1 Heatmap
+              br
+            .materialboxed_center
+              img.materialboxed src="#{uri(File.join(@results_url, 'dgea_heatmap.svg'))}" width="100%"
+            p.section
+              span.light-blue-text.text-darken-3.heading1 Top Genes Table
+            .row
+              #admin.col.s12
+                #dgea-top-table-wrapper.material-table
+                  .table-header
+                    span.table-title  Differential Genes - Top Table
+                    .actions
+                      a#download-top-table.waves-effect.btn-flat.nopadding href="#{uri(File.join(@results_url, 'dgea_toptable.tsv'))}"
+                        i.material-icons  file_download
+                      a.search-toggle.waves-effect.btn-flat.nopadding
+                        i.material-icons  search
+                  table#dgea-top-table
+                    thead
+                      tr
+                        th ID
+                        th logFC
+                        th AveExpr
+                        th t Value 
+                        th P Value
+                        th Adjusted P Value
+                        th B
+                        th
+            p.section
+              span.light-blue-text.text-darken-3.heading1 Volcano Plot
+              br
+            .materialboxed_center
+              img.materialboxed src="#{uri(File.join(@results_url, 'dgea_volcano.png'))}" width="100%"
+            p.section
+              span.light-blue-text.text-darken-3.heading1 Volcano Plots
+              br
+            #volcano_plot style=("width: 100%; height: 600px;") 
+              /! Plotly chart will be drawn inside this DIV
+          #GSEA.col.s12 data-gsea-json="#{uri(File.join(@results_url, 'gage_data.json'))}"
+            p.section
+              span.light-blue-text.text-darken-3.heading1 Heatmap
+              br
+            .materialboxed_center
+              img.materialboxed src="#{uri(File.join(@results_url, 'gage_heatmap.svg'))}" width="100%"
+            p.section
+              span.light-blue-text.text-darken-3.heading1 Top Genes Table
+            .row
+              #admin.col.s12
+                #gsea-top-table-wrapper.material-table
+                  .table-header
+                    span.table-title  Generally Applicable Gene Set Enrichment Analysis - Top Table
+                    .actions
+                      a#download-top-table.waves-effect.btn-flat.nopadding href="#{uri(File.join(@results_url, 'gage_toptable.tsv'))}"
+                        i.material-icons  file_download
+                      a.search-toggle.waves-effect.btn-flat.nopadding
+                        i.material-icons  search
+                  table#gsea-top-table
+                    thead
+                      tr
+                        th Pathway ID
+                        th Pathway
+                        th P Geomean
+                        th Stat Mean
+                        th P Value
+                        th Q Value
+                        th Set Size
+                        th

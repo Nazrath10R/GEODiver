@@ -66,11 +66,11 @@
                     label Distance method
                   .input-field.col.s4
                     select name="heatmap_clustering_method"
+                      option value="Complete" selected="" Complete
                       option value="Centroid"   Centroid
                       option value="Median"  Median
                       option value="Mcquitty"  Mcquitty
                       option value="Average"  Average
-                      option value="Complete" selected="" Complete
                       option value="Single"  Single
                       option value="Ward.D"  Ward.D
                       option value="Ward.D2"  Ward.D2
@@ -79,7 +79,7 @@
                   .col.s4
                     span.grey-text  Number of Genes to show in the Heatmap
                     p.range-field
-                      input#no_of_top_genes name="heatmap_rows" min="50" max="200" value="100" type="range" /
+                      input#no_of_top_genes name="heatmap_rows" min="50" max="150" value="100" type="range" /
 
                   .col.s12
                     .switch 
@@ -104,13 +104,12 @@
                 #volcano_params.row
                   .input-field.col.s4
                     select name="volcano_pValue_cutoff"
-                      option value="Bonferroni"  Bonferroni
-                      option value="FDR" selected=""  FDR
-                      option value="BH"  BH
-                      option value="BY"  BY
-                      option value="Hommel"  Hommel
-                      option value="Hochberg"  Hochberg
-                      option value="Holm"  Holm
+                      option value="fdr" selected=""  Benjamini & Hochberg (False discovery rate)
+                      option value="BY"  Benjamini & Yekutieli
+                      option value="bonferroni"  Bonferroni
+                      option value="hochberg"  Hochberg
+                      option value="holm"  Holm
+                      option value="hommel"  Hommel
                       option value="None"  None
                     label P value cut off
             .input-field.col.s12

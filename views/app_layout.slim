@@ -28,12 +28,11 @@ html lang="en"
         ul.right.hide-on-med-and-down
           li
             a.white-text.dropdown-button href="#!" data-activates="dropdown" data-beloworigin="true"
-              .row
-                .col.s8
-                  span.right
-                    | #{session[:user].info['first_name']}
-                .col.s4                  
-                    img.circle.profile_img.left alt="Profile Picture" src="#{session[:user].info['image']}" /
+              span.left style="padding-right:15px; max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
+                | #{session[:user].info['first_name']}
+              img.circle.profile_img.right alt="Profile Picture" src="#{session[:user].info['image']}"/
+              .clearfix
+
           a.button-collapse data-activates="nav-mobile" href="#" 
             i.material-icons menu
         ul#nav-mobile.side-nav
@@ -62,6 +61,11 @@ html lang="en"
     script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.14.0/jquery.validate.min.js"
     script src="https://cdn.plot.ly/plotly-latest.min.js" 
     script src="//cdn.datatables.net/1.10.10/js/jquery.dataTables.js"
-    script src="#{uri('assets/js/jquery.filedownload.min.js')}"
-    script src="#{uri('assets/js/datatable-materialize.js')}"
-    script src="#{uri('assets/js/geodiver.js')}" 
+    script src="#{uri('assets/js/geodiver_c.min.js')}"
+    - if request.path_info =~ %r{^/result/} || request.path_info =~ %r{^/sh/}
+      javascript:
+        $( document ).ready(function() {
+            GD.createPlots();
+        });
+    - if request.path_info =~ %r{^/my_result}
+      script src="#{uri('assets/js/my_results.min.js')}"

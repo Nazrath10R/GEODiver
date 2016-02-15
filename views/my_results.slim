@@ -1,4 +1,57 @@
-#history_container.container
-  .section
-    .card.analyse_card
-      .card-content
+#history_container.container style="padding-top:2rem;"
+  .row
+    - if @my_results.nil?
+    - else 
+      - @my_results.each do |result|
+        .col.s12.m6
+          .card.hoverable data-user="#{result[:email]}" data-result="#{result[:uniq_result]}" data-geodb="#{result[:geo_db]}" data-share-link="#{uri(result[:share_url])}"
+            .card-content.light-blue.darken-3 style="padding:1rem; text-align:left;cursor:pointer;" onclick="location.href='#{uri(result[:uniq_url])}'"
+              span.card-title.white-text
+                | #{result[:geo_db]}
+              br
+              span.grey-text.text-lighten-3 style="padding-left:10px;"
+                | Run Time: #{result[:time].strftime("%H:%M %d/%m/%Y")}
+            .card-action style="padding:0;"
+              .actions.right style=" display: -webkit-flex; margin-left: auto; padding: 10px 0;"
+                a#download-all-results.waves-effect.btn-flat.nopadding.light-blue-text.text-darken-3 data-download="#{uri(File.join(result[:relative_path], 'geodiver_results.zip'))}" style="min-width:36px;padding:0 8px;margin-right:0px"
+                  i.material-icons  file_download
+                a#delete_results.waves-effect.btn-flat.nopadding.light-blue-text.text-darken-3 style="min-width:36px;padding:0 8px;margin-right:0px" 
+                  i.material-icons  delete
+                - if result[:share]
+                  a#share_the_link_btn.waves-effect.btn-flat.nopadding.light-blue-text.text-darken-3 style="min-width:36px;padding:0 8px;margin-right:0px"
+                    i.material-icons  link
+                  a#share_btn.waves-effect.btn-flat.nopadding.light-blue-text.text-darken-3 style="min-width:36px;padding:0 8px;margin-right:0px; display:none;"
+                    i.material-icons  share
+                - else 
+                  a#share_the_link_btn.waves-effect.btn-flat.nopadding.light-blue-text.text-darken-3 style="min-width:36px;padding:0 8px;margin-right:0px; display:none;"
+                    i.material-icons  link
+                  a#share_btn.waves-effect.btn-flat.nopadding.light-blue-text.text-darken-3 style="min-width:36px;padding:0 8px;margin-right:0px"
+                    i.material-icons  share
+                a.waves-effect.btn-flat.nopadding.light-blue-text.text-darken-3 style="min-width:36px;padding:0 8px;margin-right:0px" href="#{uri(result[:uniq_url])}"
+                  i.material-icons  send
+            .clearfix
+
+
+  #share_model.modal
+    .modal-content
+      h4 Share Your Results
+      p Your Results are accessible using the following link
+      .row 
+        .input-field.col.s12
+          input#share_link_input.share_link_input type="text" placeholder="Share Link" /
+          label for="share_link_input"  Share Link
+    .modal-footer
+      a.remove_link.modal-action.modal-close.waves-effect.waves-red.btn-flat.left  Remove Sharing Link
+      a.modal-action.modal-close.waves-effect.waves-green.btn-flat href="#!"  Done
+
+
+  #share_the_link_model.modal
+    .modal-content
+      h4 Your Results are Accessible using the following link
+      .row 
+        .input-field.col.s12
+          input#share_link_input1.share_link_input type="text" placeholder="Share Link" /
+          label for="share_link_input1"  Share Link
+    .modal-footer
+      a.remove_link.modal-action.modal-close.waves-effect.waves-red.btn-flat.left  Remove Sharing Link
+      a.modal-action.modal-close.waves-effect.waves-green.btn-flat href="#!"  Done

@@ -14,19 +14,24 @@
       span.light-blue-text.text-darken-3.heading2 Principle Component Exploratory Analysis
       form#pca_redraw
         .row
-          .input-field.col.s12.m5
+          .input-field.col.s12.m3
             select#PCoption1 name='PCoption1'
               option disabled="" selected="" value=""  Choose your option
             label Select the first PCA to ananlyse
-          .input-field.col.s12.m5
+          .input-field.col.s12.m3
             select#PCoption2 name='PCoption2'
               option disabled="" selected="" value=""  Choose your option
             label Select the second PCA to ananlyse
-          .col.s12.m2
+          .input-field.col.s12.m3
+            select#PCoption3 name='PCoption3'
+              option disabled="" selected="" value=""  Choose your option
+            label Select the third PCA to ananlyse
+
+          .col.s12.m3
             button#redraw_pca.btn.waves-effect.waves-light.light-blue.accent-4.btn-large type="submit" value="redraw"
               | Redraw Plot
       .clearfix
-      #principle_plot style=("height: 500px;")
+      #principle_plot style=("height: 70vh;")
     / p.section
     /   span.light-blue-text.text-darken-3.heading2 Hierarchical Clustering Analysis
   .card-action
