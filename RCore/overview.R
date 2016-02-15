@@ -3,7 +3,8 @@
 # Filename      : DGEA.R                                   #
 # Authors       : IsmailM, Nazrath, Suresh, Marian, Anisa  #
 # Description   : Differential Gene Expression Analysis    #
-# Rscript overview.R --accession GDS5093 --dbrdata ~/Desktop/GDS5093.rData --rundir ~/Desktop/dgea/ --factor "disease.state" --popA "Dengue Hemorrhagic Fever,Convalescent,Dengue Fever" --popB "healthy control" --popname1 "Dengue" --popname2 "Normal" --analyse "Boxplot,Volcano,PCA,Heatmap,Clustering" --distance "euclidean" --clustering "average" --dev TRUE
+# Rscript overview.R --accession GDS5093 --dbrdata ~/Desktop/GDS5093.rData --rundir ~/Desktop/dgea/ --factor "disease.state" --popA "Dengue Hemorrhagic Fever,Convalescent,Dengue Fever" --popB "healthy control" --popname1 "Dengue" --popname2 "Normal" --analyse "Boxplot,Volcano,PCA" --distance "euclidean" --clustering "average" --dev TRUE
+# Rscript overview.R --accession GDS5092 --dbrdata /Users/sureshhewapathirana/Desktop/DS5092.rData --rundir ~/Desktop/dgea/ --factor "stress" --popA "normothermia (37C)" --popB "hypothermia (32C)" --popname1 "Group1" --popname2 "Group2" --analyse "Boxplot,Volcano,PCA" --distance "euclidean" --clustering "average" --dev TRUE
 # ---------------------------------------------------------#
 
 #############################################################################
@@ -80,8 +81,8 @@ population1     <- unlist(strsplit(argv$popA, ","))
 population2     <- unlist(strsplit(argv$popB, ","))
 pop.name1       <- argv$popname1
 pop.name2       <- argv$popname2
-pop.colour1     <- "#b71c1c"  # Red
-pop.colour2     <- "#0d47a1"  # Blue
+pop.colour1     <- "#e199ff" # Purple   
+pop.colour2     <- "#96ca00" # Green
 
 # Clustering
 distance_options <- c("euclidean", "maximum", "manhattan", "canberra",
@@ -121,6 +122,7 @@ scalable <- function(X) {
 
 # Boxplot
 samples.boxplot <- function(data, pop.colours, pop.names, path){
+ 
   boxplot <- ggplot(data) + geom_boxplot(aes(x = Var2, y = value, colour = Groups), outlier.shape = NA) + theme(axis.text.x = element_text(angle = 70, hjust = 1), legend.position = "right")+ labs(x = "Samples", y = "Expression Levels") + scale_color_manual(name = "Groups", values = pop.colours, labels = pop.names)
   # compute lower and upper whiskers
   ylim1 = boxplot.stats(data$value)$stats[c(1, 5)]
@@ -148,59 +150,6 @@ outlier.probability <- function(X, dist.method = "euclidean", clust.method = "av
   return(o$prob.outliers)
 }
 
-# TODO: Add Documentation
-# Clustering dendogram
-clustering <- function(X, dist.method = "euclidean", clust.method = "average", exp){
-  dendo  <-  hclust(dist(t(X), method = dist.method), method = clust.method)
-
-  # Factor types
-  factor <- as.factor(exp[,"factor.type"])
-  population <- as.factor(exp[,"population.colour"])
-
-  names(factor) <- exp$Sample
-  names(population ) <- exp$Sample
-
-  outliers <- outlier.probability(X, dist.method, clust.method)
-
-  factor.cmap <- makecmap(as.numeric(factor), n = length(levels(factor)), colFn = colorRampPalette(c('black', 'green')))
-  population.cmap <- makecmap(as.numeric(factor), n = length(levels(population)), colFn = colorRampPalette(c('black', 'blue')))
-  outliers.cmap <- makecmap(outliers, n = 10, colFn = colorRampPalette(c('black', 'red')))
-
-  matrix <- data.frame(Factor =  factor, Groups = population,
-                       Dissimilarity = cmap( outliers, outliers.cmap))
-
-  jColors <- with(matrix, data.frame(factors = levels(Factor),
-                                     color = I(brewer.pal(nlevels(Factor), name = 'Dark2'))))
-
-  matrix <- within(matrix,{
-    Factor = jColors$color[matrix$Factor]
-  })
-
-  filename <- paste(run.dir, "clustering.png", sep = "")
-  CairoPNG(file = filename, width = 1200, height = 700, xlab = "Samples")
-
-  factor.cmap$colors         <- jColors$color
-  factor.cmap$breaks         <- jColors$factors
-  factor.cmap$include.lowest <- TRUE
-
-  population.cmap$colors         <- levels(population)
-  population.cmap$breaks         <- c("Group1","Group2","")
-  population.cmap$include.lowest <- TRUE
-
-  par(mar = c(6.5,6,4,3)+0.1)  # make space for color keys
-  dendromat(dendo, matrix, height = 0.3, ylab = 'Distance')
-
-  vkey(factor.cmap, 'Factors', y = 0.9, stretch = 3 )
-  vkey(population.cmap, 'Groups', y = 0.6, stretch = 3)
-  vkey(outliers.cmap, 'Dissimilarity', y = 0.0, stretch =2)
-
-  dev.off()
-
-  if (isdebug) {
-    print(paste("Clustering has been performed", "with distance method:",
-                argv$distance, "and clustering method:", argv$clustering))
-  }
-}
 
 # Principal Component Analysis
 get.pcdata <- function(Xpca){
@@ -221,6 +170,7 @@ get.pcdata <- function(Xpca){
 get.pcplotdata <- function(Xpca, populations){
   Xscores <- Xpca$x
 
+  sample.names <- rownames(Xscores)
   rownames(Xscores) <- NULL
   cols <- colnames(Xscores)
 
@@ -228,9 +178,12 @@ get.pcplotdata <- function(Xpca, populations){
   Xscores <- lapply(1:nrow(Xscores),
                     function(y) split(Xscores[, y], populations))
   names(Xscores) <- cols
-
+  
+  pc <- unlist(Xscores, recursive = FALSE)
+  complete.data <- c(split(sample.names, populations),pc)
+    
   if (isdebug) { print("PCA has been calculated") }
-  return(unlist(Xscores, recursive = FALSE))
+  return(complete.data)
 }
 
 
@@ -245,20 +198,27 @@ if(isdebug){
 
 if (file.exists(dbrdata)){
   load(file = dbrdata)
-  if (isdebug) { print("Dataset has been loaded") }
 } else {
   if (is.na(argv$geodbpath)) {
     # Load data from downloaded file
     gse <- getGEO(filename = argv$geodbpath, GSEMatrix = TRUE)
   } else {
     # Automatically Load GEO dataset
-    gse <- getGEO(argv$accession, GSEMatrix = TRUE)
+    gse <- getGEO(accession, GSEMatrix = TRUE)
   }
   # Convert into ExpressionSet Object
   eset <- GDS2eSet(gse, do.log2 = FALSE)
 }
 
+#############################################################################
+#                           Data Preprocessing                              #
+#############################################################################
+
 X <- exprs(eset)  # Get Expression Data
+
+# Remove NA Data from the dataset
+not.null.indexes <- which(complete.cases(X[,])==TRUE)
+X <- X[not.null.indexes,]
 
 # If not log transformed, do the log2 transformed
 if (scalable(X)) {
@@ -266,18 +226,14 @@ if (scalable(X)) {
   X <- log2(X)
 }
 
-if(isdebug){
-  print(paste("Analyzing the factor", factor.type))
-  print(paste("for", pop.name1,":", argv$popA))
-  print(paste("against", pop.name2,":", argv$popB))
-}
+if (isdebug){print("Data Preprocessed!")}
 
 #############################################################################
 #                        Two Population Preparation                         #
 #############################################################################
 # Store gene names
 gene.names      <- as.character(gse@dataTable@table$IDENTIFIER)
-rownames(X)     <- gene.names
+rownames(X)     <- gene.names[not.null.indexes]
 
 # Phenotype Selection
 pclass           <- pData(eset)[factor.type]
@@ -320,11 +276,12 @@ if (isdebug) { print("Factors and Populations have been set") }
 json.list <- list()
 
 if ("Boxplot" %in% analysis.list){
-  samples.boxplot(data, c(pop.colour1, pop.colour2),
-                  c(pop.name1, pop.name2), path = run.dir)
+  samples.boxplot(data, c(pop.colour2, pop.colour1),
+                  c(pop.name2, pop.name1), path = run.dir)
 }
 
 if ("PCA" %in% analysis.list){
+   
   Xpca <- prcomp(t(X), scale = TRUE)
 
   # PC individual and cumulative values
@@ -336,10 +293,6 @@ if ("PCA" %in% analysis.list){
 
   # adding both data to the json list
   json.list <- append(json.list, list(pcdata = pcplotdata))
-}
-
-if ("Clustering" %in% analysis.list){
-  clustering(X, dist.method, clust.method, expression.info)
 }
 
 if (length(json.list) != 0) {

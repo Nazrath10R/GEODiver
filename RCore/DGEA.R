@@ -3,7 +3,8 @@
 # Filename      : DGEA.R                                   #
 # Authors       : IsmailM, Nazrath, Suresh, Marian, Anisa  #
 # Description   : Differential Gene Expression Analysis    #
-# Rscript dgea.R --accession GDS5093 --dbrdata ~/Desktop/GDS5093.rData --rundir ~/Desktop/ --factor "disease.state" --popA "Dengue Hemorrhagic Fever,Convalescent,Dengue Fever" --popB "healthy control" --popname1 "Dengue" --popname2 "Normal" --analyse "Boxplot,Volcano,PCA,Heatmap,Clustering" --topgenecount 250 --foldchange 0.3 --thresholdvalue 0.005 --distance "euclidean" --clustering "average" --heatmaprows 100 --dendrow TRUE --dendcol TRUE --adjmethod fdr --dev TRUE
+# Rscript dgea.R --accession GDS5093 --dbrdata ~/Desktop/GDS5093.rData --rundir ~/Desktop/ --factor "disease.state" --popA "Dengue Hemorrhagic Fever,Convalescent,Dengue Fever" --popB "healthy control" --popname1 "Dengue" --popname2 "Normal" --analyse "Boxplot,Volcano,PCA,Heatmap,Clustering" --topgenecount 250 --foldchange 0.0 --thresholdvalue 0.005 --distance "euclidean" --clustering "average" --clusterby "Complete" --heatmaprows 100 --dendrow TRUE --dendcol TRUE --adjmethod fdr --dev TRUE
+# Rscript dgea.R --accession GDS5092 --dbrdata ~/Desktop/GDS5092.rData --rundir ~/Desktop/ --factor "stress" --popA "normothermia (37C)" --popB "hypothermia (32C)" --popname1 "Dengue" --popname2 "Normal" --analyse "Boxplot,Volcano,PCA,Heatmap,Clustering" --topgenecount 250 --foldchange 0.0 --thresholdvalue 0.005 --distance "euclidean" --clustering "average" --clusterby "Complete" --heatmaprows 100 --dendrow TRUE --dendcol TRUE --adjmethod fdr --dev TRUE
 # ---------------------------------------------------------#
 
 #############################################################################
@@ -72,6 +73,8 @@ parser <- add_argument(parser, "--dendrow",
                        help = "Boolean value for display dendogram for Genes")
 parser <- add_argument(parser, "--dendcol",
                        help = "Boolean value for display dendogram for Samples")
+parser <- add_argument(parser, "--clusterby",
+                       help = "Cluster by complete dataset or toptable")
 # Clustering
 parser <- add_argument(parser, "--distance",
                        help = "Distance measurement methods")
@@ -120,6 +123,7 @@ if (argv$adjmethod %in% adjmethod_options) {
 heatmap.rows <- as.numeric(argv$heatmaprows)
 dendrow      <- as.logical(argv$dendrow)
 dendcol      <- as.logical(argv$dendcol)
+cluster.by   <- argv$clusterby
 
 # Clustering
 distance_options <- c("euclidean", "maximum", "manhattan", "canberra",
@@ -154,6 +158,7 @@ if (!is.na(argv$dev)) {
 
 # auto-detect if data is log transformed
 scalable <- function(X) {
+  # sample quantiles corresponding to the given probabilities
   qx <- as.numeric(quantile(X, c(0., 0.25, 0.5, 0.75, 0.99, 1.0), na.rm = T))
   logc <- (qx[5] > 100) ||
       (qx[6] - qx[1] > 50 && qx[2] > 0) ||
@@ -163,7 +168,8 @@ scalable <- function(X) {
 
 # Calculate Outliers Probabilities/ Dissimilarities
 outlier.probability <- function(X, dist.method = "euclidean", clust.method = "average"){
-  # Rank outliers using distance and clustering parameters
+ 
+ # Rank outliers using distance and clustering parameters
   o <- outliers.ranking(t(X),test.data = NULL, method.pars = NULL,
                         method = "sizeDiff", # Outlier finding method
                         clus = list(dist = dist.method,
@@ -174,6 +180,8 @@ outlier.probability <- function(X, dist.method = "euclidean", clust.method = "av
 }
 
 find.toptable <- function(X, newpclass, toptable.sortby, topgene.count){
+  
+  # creates a design (or model) matrix
   design  <- model.matrix(~0 + newpclass)
 
   # plots linear model for each gene and estimate fold changes and standard errors
@@ -185,11 +193,11 @@ find.toptable <- function(X, newpclass, toptable.sortby, topgene.count){
 
   fit <- contrasts.fit(fit, contrasts)
 
-  # empirical Bayes smoothing to standard errors
+  # empirical bayes smoothing to standard errors
   fit <- eBayes(fit, proportion = 0.01)
 
-  # Create top Table
-  toptable <- topTable(fit,adjust.method = adj.method, sort.by = toptable.sortby, 
+  # create top Table
+  toptable <- topTable(fit, adjust.method = adj.method, sort.by = toptable.sortby, 
                        number = topgene.count)
   if(isdebug){
     print(paste("TopTable has been produced", 
@@ -199,26 +207,43 @@ find.toptable <- function(X, newpclass, toptable.sortby, topgene.count){
 }
 
 # Heatmap
-heatmap <- function(X.matix, exp, heatmap.rows = 100, dendogram.row, dendogram.col,
+heatmap <- function(X.matix, X, exp, heatmap.rows = 100, dendogram.row, dendogram.col,
                     dist.method, clust.method, path){
 
   col.pal <- colorRampPalette(rev(RColorBrewer::brewer.pal(11, "RdYlGn")))(100)
 
+  # Annotation column for samples
+  ann.col <- data.frame(Population = exp[, "population"],
+                        Factor     = exp[, "factor.type"])
+  
+  # Clustering based on complete dataset or only toptable data
+  if (cluster.by == "Complete"){
+      exp.data <- X
+  }else{
+      exp.data <- X.matix
+  }
+ 
   # Column dendogram
   if (dendogram.col == TRUE){
-    hc <- hclust(dist(t(X.matix), method = dist.method), method = clust.method)
-
-    outliers <- outlier.probability(X.matix, dist.method, clust.method)
-
-    ann.col <- data.frame(Population    = exp[, "population"],
-                          Factor        = exp[, "factor.type"],
-                          Dissimilarity = outliers)
+    
+    # calculate heirachical clustering
+    hc <- hclust(dist(t(exp.data), method = dist.method), method = clust.method)
+    
+    # Find outlier ranking/ probability
+    outliers <- outlier.probability(exp.data, dist.method, clust.method)
+    
+    # Add dissimilarity annotation to the samples annotation
+    ann.col$Dissimilarity <- outliers
+    colnames(ann.col) <- c("Population", factor.type,"Dissimilarity")
+    
     column.gap <- 0
+    
   } else {
+      
     hc <- FALSE
-
-    ann.col <- data.frame(Population = exp[, "population"],
-                          Factor     = exp[, "factor.type"])
+    colnames(ann.col) <- c("Population", factor.type)
+    
+    # Keep a gap between two groups
     column.gap <- length( (which(ann.col[, "Population"] == "Group1") == T) )
   }
 
@@ -227,14 +252,14 @@ heatmap <- function(X.matix, exp, heatmap.rows = 100, dendogram.row, dendogram.c
   filename <- paste(path, "dgea_heatmap.svg", sep = "")
   CairoSVG(file = filename)
 
-  pheatmap(X.matix[1:heatmap.rows, ],
+  pheatmap(X.matix[1:heatmap.rows,],
            cluster_row    = dendogram.row,
            cluster_cols   = hc,
            annotation_col = ann.col,
            legend         = TRUE,
            color          = col.pal,
            fontsize       = 6.5,
-           fontsize_row   = 3.5,
+           fontsize_row   = 3.0,
            fontsize_col   = 3.5,
            gaps_col       = column.gap)
   dev.off()
@@ -249,11 +274,10 @@ heatmap <- function(X.matix, exp, heatmap.rows = 100, dendogram.row, dendogram.c
 # Apply Bonferroni cut-off as the default thresold value
 volcanoplot <- function(toptable, fold.change, t = 0.05 / length(gene.names), path){
 
-  # Highlight genes that have an logFC greater than fold change
-  # a p-value less than Bonferroni cut-off
-  toptable$Significant <- as.factor(abs(toptable$logFC)  > fold.change &
-                                    toptable$P.Value < t)
-
+  # Select only top genes/ significant genes  
+  toptable$Significant <- c(rep(TRUE,topgene.count),
+                            rep(FALSE,length(toptable$ID) - topgene.count))
+  
   # Construct the plot object
   vol <- ggplot(data = toptable, aes(x = toptable$logFC, y = -log10(toptable$P.Value), colour = Significant)) +
       geom_point(alpha = 0.4, size = 1.75)  + xlim(c(-max(toptable$logFC) - 0.1, max(toptable$logFC) + 0.1)) + ylim(c(0, max(-log10(toptable$P.Value)) + 0.5)) + xlab("log2 fold change") + ylab("-log10 p-value")
@@ -288,37 +312,38 @@ if (file.exists(dbrdata)){
   load(file = dbrdata)
   if (isdebug) { print("Dataset has been loaded") }
 } else {
-  if (is.na(argv$geodbpath)) {
-    # Load data from downloaded file
-    gse <- getGEO(filename = argv$geodbpath, GSEMatrix = TRUE)
-  } else {
-    # Automatically Load GEO dataset
-    gse <- getGEO(argv$accession, GSEMatrix = TRUE)
-  }
+  # Automatically Load GEO dataset
+  gse <- getGEO(argv$accession, GSEMatrix = TRUE)
+    
   # Convert into ExpressionSet Object
   eset <- GDS2eSet(gse, do.log2 = FALSE)
 }
 
+#############################################################################
+#                           Data Preprocessing                              #
+#############################################################################
+
 X <- exprs(eset)  # Get Expression Data
+
+# Remove NA data from the dataset
+not.null.indexes <- which(complete.cases(X[,])==TRUE)
+X <- X[not.null.indexes,]
 
 # If not log transformed, do the log2 transformed
 if (scalable(X)) {
-  X[which(X <= 0)] <- NaN # not possible to log transform negative numbers
-  X <- log2(X)
+    X[which(X <= 0)] <- NaN # not possible to log transform negative numbers
+    X <- log2(X)
 }
 
-if (isdebug) {
-  print(paste("Analyzing the factor", factor.type))
-  print(paste("for", pop.name1,":", argv$popA))
-  print(paste("against", pop.name2,":", argv$popB))
-}
+if (isdebug){print("Data Preprocessed!")}
 
 #############################################################################
 #                        Two Population Preparation                         #
 #############################################################################
+
 # Store gene names
 gene.names      <- as.character(gse@dataTable@table$IDENTIFIER)
-rownames(X)     <- gene.names
+rownames(X)     <- gene.names[not.null.indexes]
 
 # Phenotype Selection
 pclass           <- pData(eset)[factor.type]
@@ -329,8 +354,8 @@ expression.info  <- data.frame(pclass, Sample = rownames(pclass),
                                row.names = rownames(pclass))
 
 # Introduce two columns to expression.info :
-#   1. population - new two groups/populations
-#   2. population.colour - colour for two new two groups/populations
+#   1. population - new two groups/populations, NA for unselected samples
+#   2. population.colour - colour for two new two groups, black for unselected samples
 expression.info <- within(expression.info, {
   population        <- ifelse(factor.type %in% population1, "Group1",
                          ifelse(factor.type %in% population2, "Group2", NA))
@@ -362,6 +387,7 @@ if (isdebug) { print("Factors and Populations have been set") }
 #                        Function Calling                                   #
 #############################################################################
 
+# empty list to collect all data need to be displayed in plotly
 json.list <- list()
 
 # Toptable
@@ -399,8 +425,10 @@ if ("Volcano" %in% analysis.list){
 }
 
 if ("Heatmap" %in% analysis.list){
-    heatmap(X.toptable, expression.info, heatmap.rows = heatmap.rows,
+    
+    heatmap(X.toptable,X, expression.info, heatmap.rows = heatmap.rows,
             dendrow, dendcol, dist.method, clust.method, run.dir)
+  
 }
 
 if (length(json.list) != 0){
