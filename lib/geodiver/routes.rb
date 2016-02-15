@@ -7,14 +7,14 @@ require 'slim'
 
 require 'geodiver/load_geo_db'
 require 'geodiver/geo_analysis'
+require 'geodiver/history'
 require 'geodiver/version'
 
 module GeoDiver
   # The Sinatra Routes - i.e. The Controller
   class Routes < Sinatra::Base
-    register Sinatra::CrossOrigin
-    # See
-    # http://www.sinatrarb.com/configuration.html
+    
+    # See http://www.sinatrarb.com/configuration.html
     configure do
       # We don't need Rack::MethodOverride. Let's avoid the overhead.
       disable :method_override
@@ -66,54 +66,101 @@ module GeoDiver
     end
 
     get '/analyse' do
-      redirect '/auth/google_oauth2' if session[:uid].nil?
+      redirect to('auth/google_oauth2') if session[:user].nil?
       slim :analyse, layout: :app_layout
     end
 
     get '/my_results' do
-      redirect '/auth/google_oauth2' if session[:uid].nil?
+      redirect to('auth/google_oauth2') if session[:user].nil?
+      @my_results = History.run(session[:user])
       slim :my_results, layout: :app_layout
     end
 
+    get '/result/:encoded_email/:geo_db/:time' do
+      redirect to('auth/google_oauth2') if session[:user].nil?
+      email = Base64.decode64(params[:encoded_email])
+      @results_url = File.join('GeoDiver/Users/', email, params['geo_db'],
+                               params['time'])
+      slim :single_results, layout: :app_layout
+    end
+
+    get '/sh/:encoded_email/:geo_db/:time' do
+      email = Base64.decode64(params[:encoded_email])
+      @results_url = File.join('GeoDiver/Share/', email, params['geo_db'],
+                               params['time'])
+      slim :single_results, layout: :app_layout
+    end
+
+    post '/sh/:encoded_email/:geo_db/:time' do
+      email = Base64.decode64(params[:encoded_email])
+      analysis  = File.join(GeoDiver.users_dir, email, params['geo_db'],
+                               params['time'])
+      share = File.join(GeoDiver.public_dir, 'GeoDiver/Share', email,
+                        params['geo_db'])
+      FileUtils.mkdir_p(share) unless File.exist? share
+      FileUtils.cp_r(analysis, share)
+    end
+
+    post '/rm/:encoded_email/:geo_db/:time' do
+      email = Base64.decode64(params[:encoded_email])
+      share = File.join(GeoDiver.public_dir, 'GeoDiver/Share', email,
+                        params['geo_db'], params['time'])
+      FileUtils.rm_r(share) if File.exist? share
+    end
+
+
     post '/load_geo_db' do
-      redirect '/auth/google_oauth2' if session[:uid].nil?
+      redirect to('auth/google_oauth2') if session[:user].nil?
       LoadGeoData.init(params)
       @geo_db_results = LoadGeoData.run
       slim :load_db, layout: false
     end
 
     post '/analyse' do
-      redirect '/auth/google_oauth2' if session[:uid].nil?
+      redirect to('auth/google_oauth2') if session[:user].nil?
       @run_uniq_id = GeoAnalysis.init(params, session[:user])
       @results_link = GeoAnalysis.run
       slim :results, layout: false
     end
 
     post '/gene_expression_url' do
-      redirect '/auth/google_oauth2' if session[:uid].nil?
+      redirect to('auth/google_oauth2') if session[:user].nil?
       content_type :json
-      jsonfile = GeoAnalysis.get_expression_json(params)
+      jsonfile = GeoAnalysis.get_expression_json(params, session[:user])
       json = IO.read(jsonfile)
-      puts json
       json
     end
 
     post '/interaction' do
-      redirect '/auth/google_oauth2' if session[:uid].nil?
-      GeoAnalysis.create_interactions(params)
+      redirect to('auth/google_oauth2') if session[:user].nil?
+      @interaction_img = GeoAnalysis.create_interactions(params)
+      slim :interactionNetwork, layout: false
+    end
+
+    post '/delete_result' do 
+      redirect to('auth/google_oauth2') if session[:user].nil?
+      @results_url = File.join(GeoDiver.users_dir, session[:user].info['email'],
+                               params['geo_db'], params['result_id'])
+      FileUtils.rm_r @results_url if Dir.exist? @results_url
     end
 
     get '/auth/:provider/callback' do
       content_type 'text/plain'
-      session[:uid] = env['omniauth.auth']['uid']
       session[:user] = env['omniauth.auth']
-      redirect '/analyse'
+      user_dir   = File.join(GeoDiver.users_dir, session[:user].info['email'])
+      user_public = File.join(GeoDiver.public_dir, 'GeoDiver/Users')
+      FileUtils.mkdir(user_dir) unless Dir.exist?(user_dir)
+      unless File.exist? File.join(user_public, session[:user].info['email'])
+        FileUtils.ln_s(user_dir, user_public)
+      end
+      redirect '/analyse' 
     end
 
     get '/logout' do
-      session[:uid] = nil
+      user_public_dir = File.join(GeoDiver.public_dir, 'GeoDiver/Users', 
+                                  session[:user].info['email'])
+      FileUtils.rm(user_public_dir)
       session[:user] = nil
-      # TODO: remove user files from public dir
       redirect '/'
     end
 
