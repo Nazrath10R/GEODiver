@@ -33,6 +33,7 @@ module GeoDiver
 
       init_dirs
       check_num_threads
+      init_geo_dbs
 
       self
 
@@ -103,6 +104,16 @@ module GeoDiver
       @db_dir = File.expand_path('../DBs', @public_dir)
       FileUtils.mkdir_p(@users_dir)
       FileUtils.mkdir_p(@db_dir)
+    end
+
+    def init_geo_dbs
+      return unless config[:geo_db_dir]
+      config[:geo_db_dir] = File.expand_path(config[:geo_db_dir])
+      Dir.foreach(config[:geo_db_dir]) do |accession|
+        next unless accession =~ /^GDS/
+        full_path = File.join(config[:geo_db_dir], accession)
+        FileUtils.ln_s(full_path, @db_dir)
+      end
     end
 
     def check_num_threads
