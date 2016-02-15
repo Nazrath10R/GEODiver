@@ -153,7 +153,7 @@ module GeoDiver
 
       def convert_geo_db_into_r_objects
         return if File.exist?(File.join(db_dir, @params['geo_db'],
-                                        "#{@params['geo_db']}.Rdata"))
+                                        "#{@params['geo_db']}.RData"))
         logger.debug("Running: #{load_geo_db_cmd}")
         @load_geo_db = Thread.new { system(load_geo_db_cmd) }
       end
@@ -165,7 +165,7 @@ module GeoDiver
         " --geodbpath #{File.join(geo_db_dir, "#{@params['geo_db']}.soft.gz")}"\
         " --outrdata  #{File.join(geo_db_dir, "#{@params['geo_db']}.RData")}" \
         " && echo 'Finished creating Rdata file:" \
-        " #{File.join(geo_db_dir, "#{@params['geo_db']}.Rdata")}'"
+        " #{File.join(geo_db_dir, "#{@params['geo_db']}.RData")}'"
       end
     end
   end
