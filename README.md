@@ -19,27 +19,34 @@ GeoDiver is a web app that allows users to easily analyse GEO datasets.
 ## Installation
 ### Installation Requirements
 * Ruby (>= 2.0.0)
+  * Recommended to use rvm to install ruby
+* R (=3.2.2)
+  * Recommended to use R to install R
+
 
 
 ### Installation
 Simply run the following command in the terminal.
 
 ```bash
-gem install geodiver 
-```
+# Clone the repository.
+git clone https://github.com/SBCS-Bioinformatics/GEODiver
 
-If that doesn't work, try `sudo gem install geodiver` instead.
+# Move into GeoDiver source directory.
+cd GEODiver
+
+# Install R dependencies & Build and install the latest version of the webapp.
+rake install 
+
+# Start the web app
+passenger start --envvar GOOGLE_KEY=113114282317-af1ph7hqm7uvhbc289gpu5fteuo8i4a3.apps.googleusercontent.com --envvar GOOGLE_SECRET=_QrM-_WoTNjcreNRAw6MXfZE -p 9292 -e production
+```
 
 ##### Running From Source (Not Recommended)
 It is also possible to run from source. However, this is not recommended.
 
 ```bash
-# Clone the repository.
-git clone https://github.com/ ...
-
-# Move into GeoDiver source directory.
-cd GeoDiver
-
+# After cloning the web app and moving into the source directory 
 # Install bundler
 gem install bundler
 
@@ -49,28 +56,25 @@ bundle install
 # Optional: run tests and build the gem from source
 bundle exec rake
 
-# Run GeneValidator.
-bundle exec geodiver -h
+# Run GeoDiver
+bundle exec passenger start -h
 # note that `bundle exec` executes GeoDiver in the context of the bundle
 
-# Alternativaly, install GeoDiver as a gem
-bundle exec rake install
-geodiver -h
+# Alternatively run Geodiver using the command line interface
+bundle exec geodiver -h
 ```
 
 
 
 
-## Launch GeneValidator
+## Launch GeoDiver
 
-To configure and launch Geodiver, run the following from a command line.
+To configure and launch Geodiver, run the following from a command line from the GeoDiver root folder.
 
 ```bash
-geodiver
+bundle exec passenger start -h
+
 ```
-
-Geodiver will automatically guide you through an interactive setup process to help set up your installation.
-
 That's it! Open http://localhost:9292/ and start using GeoDiver!
 
 
@@ -80,34 +84,19 @@ That's it! Open http://localhost:9292/ and start using GeoDiver!
 
 ## Advanced Usage
 
-See `$ geodiver -h` for more information on all the options available when running GeoDiver.
+See `$ passenger start -h` for more information on all the options available when running GeoDiver.
 
-```bash
-
-SUMMARY:
-  GeoDiver - A easy to use web tool for analysing GEO datasets.
-
-USAGE:
-  $ geodiver [options]
-
-Examples:
-  # Launch GeoDiver with the given config file
-  $ geodiver --config ~/.geodiver.conf
-
-  # Launch GeoDiver with 8 threads at port 8888
-  $ geodiver --num_threads 8 --port 8888
+# Config file
+A Config file can be used to specify arguments - the default location of this file is in the home directory at `~/.geodiver.conf`. An examplar of the config file can be seen below.
 
 
-    -c, --config_file        Use the given configuration file
-    -g, --gd_public_dir      The public directory that is served to the web application.
-    -n, --num_threads        Number of threads to use to run a BLAST search
-    -H, --host               Host to run GeoDiver on
-    -p, --port               Port to run GeoDiver on (remember to update the port in Google Developer API as well)
-    -s, --set                Set configuration value in default or given config file
-    -D, --devel              Start GeoDiver in development mode
-    -v, --version            Print version number of GeoDiver that will be loaded
-    -h, --help               Display this help message.
-
+```yaml
+---
+:num_threads: 8
+:port: '9292'
+:host: 0.0.0.0
+:gd_public_dir: "/Users/ismailm/.geodiver"
+:devel: true
 ```
 
 
