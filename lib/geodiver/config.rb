@@ -1,8 +1,8 @@
 require 'forwardable'
 
-# Define Config class.
+# GeoDiver Namespace
 module GeoDiver
-  # Capture our configuration system.
+  # Define Config class. Capture our configuration system.
   class Config
     extend Forwardable
 
@@ -43,7 +43,7 @@ module GeoDiver
 
     private
 
-    # Symbolizes keys. Changes `database` key to `database_dir`.
+    # Symbolizes keys.
     def symbolise(data)
       return {} unless data
       # Symbolize keys.

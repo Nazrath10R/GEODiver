@@ -23,59 +23,68 @@ module GeoDiver
 
       def_delegators GeoDiver, :logger, :public_dir, :db_dir
 
-      attr_accessor :load_geo_db
-
-      #
-      def init(params)
-        logger.debug('Loading Database')
-        assert_params(params)
+      # Check if the GEO database has already been downloaded, if not, then
+      # download the GEO dataset and extract the meta data and convert into
+      # RData
+      def run(params)
+        init(params)
+        meta_json_file = File.join(db_dir, params['geo_db'],
+                              "#{params['geo_db']}.json")
+        if File.exist? meta_json_file
+          logger.debug("Found GeoDb at: '#{meta_json_file}'")
+          logger.debug("Parsing GeoDb '#{params['geo_db']}'")
+          meta_data = parse_meta_data(meta_json_file)
+        else
+          logger.debug("Local GeoDb for '#{params['geo_db']}' not found.")
+          meta_data = download_and_parse_meta_data(params['geo_db'])
+          write_to_json(meta_data, meta_json_file)
+        end
+        soft_link_meta_json_to_public_dir(params['geo_db'], meta_json_file)
+        logger.debug("GeoDb loaded into memory")
+        meta_data
       end
 
-      #
-      def run
-        @meta_json = File.join(db_dir, @params['geo_db'],
-                               "#{@params['geo_db']}.json")
-        meta_data = (File.exist?(@meta_json)) ? parse_meta : download_meta_data
-        soft_link_meta_json_to_public_dir
-        logger.debug("Meta Data: #{meta_data}")
-        convert_geo_db_into_r_objects
-        meta_data
+      def convert_geodb_into_RData(geo_accession)
+        return if File.exist?(File.join(db_dir, geo_accession,
+                                        "#{geo_accession}.RData"))
+        logger.debug("Running: #{load_geo_db_cmd}")
+        Thread.new { system(load_geo_db_cmd) }
+        # TODO check exit status of the system call
       end
 
       private
 
-      #
-      def assert_params(params)
-        @params = params
-        assert_geo_db_present
+      # Verify paramaters
+      def init(params)
+        assert_geo_db_present(params)
       end
 
       #
-      def assert_geo_db_present
+      def assert_geo_db_present(params)
         logger.debug('Checking if the GEO DB parameter is present.')
-        return unless @params['geo_db'].nil? || @params['geo_db'].empty?
+        return unless params['geo_db'].nil? || params['geo_db'].empty?
         fail ArgumentError, 'No GEO database provided.'
       end
 
-      def parse_meta
-        logger.debug("Parse the Meta JSON file at: #{@meta_json}")
-        JSON.parse(IO.read(@meta_json))
-      end
-      #
-      def download_meta_data
-        file = download_geo_file
-        data = read_geo_file(file)
-        data = parse_geo_db(data)
-        write_to_json(data, @meta_json)
-        data
+      def parse_meta_data(meta_json_file)
+        logger.debug("Parse the Meta JSON file at: #{meta_json_file}")
+        meta_file_content = IO.read meta_json_file
+        JSON.parse(meta_file_content)
       end
 
       #
-      def download_geo_file
-        remote_dir = generate_remote_url
-        output_dir = File.join(db_dir, @params['geo_db'])
+      def download_and_parse_meta_data(geo_accession)
+        file = download_geo_file(geo_accession)
+        data = read_geo_file(file)
+        parse_geo_db(data)
+      end
+
+      #
+      def download_geo_file(geo_accession)
+        remote_dir = generate_remote_url(geo_accession)
+        output_dir = File.join(db_dir, geo_accession)
         FileUtils.mkdir(output_dir) unless Dir.exist? output_dir
-        compressed = File.join(output_dir, "#{@params['geo_db']}.soft.gz")
+        compressed = File.join(output_dir, "#{geo_accession}.soft.gz")
         logger.debug("Downloading from: #{remote_dir} ==> #{compressed}")
         system "wget #{remote_dir} --output-document #{compressed}" \
                ' >/dev/null 2>&1'
@@ -85,20 +94,21 @@ module GeoDiver
       end
 
       #
-      def generate_remote_url
-        if @params['geo_db'].length == 6
+      def generate_remote_url(geo_accession)
+        if geo_accession.length == 6
           remote_dir = 'ftp://ftp.ncbi.nlm.nih.gov//geo/datasets/GDSnnn/' \
-                       "#{@params['geo_db']}/soft/#{@params['geo_db']}.soft.gz"
+                       "#{geo_accession}/soft/#{geo_accession}.soft.gz"
         else
-          dir_number = @params['geo_db'].match(/GDS(\d)\d+/)[1]
+          dir_number = geo_accession.match(/GDS(\d)\d+/)[1]
           remote_dir = 'ftp://ftp.ncbi.nlm.nih.gov//geo/datasets/' \
-                       "GDS#{dir_number}nnn/#{@params['geo_db']}/soft/" \
-                       "#{@params['geo_db']}.soft.gz"
+                       "GDS#{dir_number}nnn/#{geo_accession}/soft/" \
+                       "#{geo_accession}.soft.gz"
         end
         remote_dir
       end
 
-      #
+      # Loads the file into memory line by line
+      # Stop loading the file once it has read all the meta data.
       def read_geo_file(file)
         data = []
         IO.foreach(file) do |line|
@@ -128,7 +138,7 @@ module GeoDiver
         subsets.lines.each_slice(5) do |subset|
           desc = subset[2].match(/\!subset_description = (.*)/)[1]
           type = subset[4].match(/\!subset_type = (.*)/)[1].gsub(' ', '.')
-          # samples = subset[3].match(/\!subset_sample_id = (.*)/)[1]
+          samples = subset[3].match(/\!subset_sample_id = (.*)/)[1]
           results[type] ||= []
           results[type] << desc
         end
@@ -142,30 +152,24 @@ module GeoDiver
       end
 
       #
-      def soft_link_meta_json_to_public_dir
+      def soft_link_meta_json_to_public_dir(geo_accession, meta_json_file)
         public_meta_json = File.join(public_dir, 'GeoDiver/DBs/',
-                                     "#{@params['geo_db']}.json")
-        logger.debug("Creating a Soft Link from: #{@meta_json} ==>" \
+                                     "#{geo_accession}.json")
+        logger.debug("Creating a Soft Link from: #{meta_json_file} ==>" \
                      " #{public_meta_json}")
         return if File.exist? public_meta_json
-        FileUtils.ln_s(@meta_json, public_meta_json)
+        FileUtils.ln_s(meta_json_file, public_meta_json)
       end
 
-      def convert_geo_db_into_r_objects
-        return if File.exist?(File.join(db_dir, @params['geo_db'],
-                                        "#{@params['geo_db']}.RData"))
-        logger.debug("Running: #{load_geo_db_cmd}")
-        @load_geo_db = Thread.new { system(load_geo_db_cmd) }
-      end
-
-      def load_geo_db_cmd
-        geo_db_dir = File.join(db_dir, @params['geo_db'])
+      #
+      def load_geo_db_cmd(geo_accession)
+        geo_db_dir = File.join(db_dir, geo_accession)
         "Rscript #{File.join(GeoDiver.root, 'RCore/download_GEO.R')}" \
-        " --accession #{@params['geo_db']}" \
-        " --geodbpath #{File.join(geo_db_dir, "#{@params['geo_db']}.soft.gz")}"\
-        " --outrdata  #{File.join(geo_db_dir, "#{@params['geo_db']}.RData")}" \
+        " --accession #{geo_accession}" \
+        " --geodbpath #{File.join(geo_db_dir, "#{geo_accession}.soft.gz")}"\
+        " --outrdata  #{File.join(geo_db_dir, "#{geo_accession}.RData")}" \
         " && echo 'Finished creating Rdata file:" \
-        " #{File.join(geo_db_dir, "#{@params['geo_db']}.RData")}'"
+        " #{File.join(geo_db_dir, "#{geo_accession}.RData")}'"
       end
     end
   end

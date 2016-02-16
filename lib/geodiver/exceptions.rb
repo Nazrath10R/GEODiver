@@ -8,7 +8,7 @@
 # message (to_s method), and necessary attributes to act on the error.
 #
 # We define as many error classes as needed to be precise about the issue, thus
-# making it easy for downstream code (bin/genevalidatorapp or config.ru) to act
+# making it easy for downstream code (bin/geodiver or config.ru) to act
 # on them.
 
 module GeoDiver

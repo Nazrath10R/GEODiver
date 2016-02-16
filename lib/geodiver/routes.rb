@@ -7,11 +7,12 @@ require 'slim'
 
 require 'geodiver/load_geo_db'
 require 'geodiver/geo_analysis'
+require 'geodiver/geo_analysis_helper'
 require 'geodiver/history'
 require 'geodiver/version'
 
 module GeoDiver
-  # The Sinatra Routes - i.e. The Controller
+  # Sinatra Routes - i.e. The Controller
   class Routes < Sinatra::Base
     
     # See http://www.sinatrarb.com/configuration.html
@@ -37,19 +38,20 @@ module GeoDiver
     end
 
     configure do
-      # Uer Rack::Session::Pool over Sinatra default sessions as the Pool saves
-      # the session info as a instance variable (as compared to within a
-      # cookie). Therefore, Rack::Session::Pool should be faster.
+      # Uer Rack::Session::Pool over Sinatra default sessions. The Session Pool
+      # saves session info as a instance variable (as compared to within a
+      # cookie) and thus, Rack::Session::Pool should be faster. Moreover, it
+      # allows for the storage of complex objects. 
       use Rack::Session::Pool
 
-      # Pass OmniAuth the Google Key and Secret Key for Authentication
+      # Provide OmniAuth the Google Key and Secret Key for Authentication
       use OmniAuth::Builder do
         provider :google_oauth2, ENV['GOOGLE_KEY'], ENV['GOOGLE_SECRET'], {}
       end
     end
 
     configure do
-      # views directory will be found here.
+      # view directory will be found here.
       set :root, -> { GeoDiver.root }
 
       # This is the full path to the public folder...
@@ -61,36 +63,77 @@ module GeoDiver
       logger.debug params
     end
 
+    # Home page (marketing page)
     get '/' do
       slim :home, layout: false
     end
 
+    # Analyse Page
     get '/analyse' do
       redirect to('auth/google_oauth2') if session[:user].nil?
       slim :analyse, layout: :app_layout
     end
 
+    # My Results Page
     get '/my_results' do
       redirect to('auth/google_oauth2') if session[:user].nil?
-      @my_results = History.run(session[:user])
+      @my_results = History.run(session[:user].info['email'])
       slim :my_results, layout: :app_layout
     end
 
+    # Individual Result Pages
     get '/result/:encoded_email/:geo_db/:time' do
       redirect to('auth/google_oauth2') if session[:user].nil?
-      email = Base64.decode64(params[:encoded_email])
-      @results_url = File.join('GeoDiver/Users/', email, params['geo_db'],
-                               params['time'])
+      email     = Base64.decode64(params[:encoded_email])
+      json_file = File.join(GeoDiver.public_dir, 'GeoDiver/Users/', email,
+                            params['geo_db'], params['time'], 'params.json')
+      @results  = JSON.parse( IO.read( json_file) )
       slim :single_results, layout: :app_layout
     end
 
+    # Shared Result Pages (Can be viewed without logging in)
     get '/sh/:encoded_email/:geo_db/:time' do
-      email = Base64.decode64(params[:encoded_email])
-      @results_url = File.join('GeoDiver/Share/', email, params['geo_db'],
-                               params['time'])
+      email     = Base64.decode64(params[:encoded_email])
+      json_file = File.join(GeoDiver.public_dir, 'GeoDiver/Share/', email,
+                            params['geo_db'], params['time'], 'params.json')
+      @results  = JSON.parse( IO.read( json_file) )
       slim :single_results, layout: :app_layout
     end
 
+    # Load the Geo Database
+    post '/load_geo_db' do
+      redirect to('auth/google_oauth2') if session[:user].nil?
+      @geo_db_results = LoadGeoData.run(params)
+      # Convert the GeoDb into RData in the background if necessary 
+      session[:bgThread] = LoadGeoData.convert_geodb_into_RData(params['geo_db'])
+      slim :load_db, layout: false
+    end
+
+    # Run the GeoDiver Analysis
+    post '/analyse' do
+      redirect to('auth/google_oauth2') if session[:user].nil?
+      email = session[:user].info['email']
+      @results = GeoAnalysis.run(params, email, request.base_url, session[:bgThread])
+      slim :results, layout: false
+    end
+
+    # Generate and return a JSON object for the Gene Expression Results
+    post '/gene_expression_graph' do
+      redirect to('auth/google_oauth2') if session[:user].nil?
+      content_type :json
+      email    = session[:user].info['email']
+      GeoAnalysisHelper.get_expression_json(params, email)
+    end
+
+    # Generate the Interaction Netwoks
+    post '/interaction_image' do
+      redirect to('auth/google_oauth2') if session[:user].nil?
+      email            =  session[:user].info['email']
+      @interaction_img = GeoAnalysisHelper.create_interactions(params, email)
+      slim :interactionNetwork, layout: false
+    end
+
+    # Create a share link for a result page
     post '/sh/:encoded_email/:geo_db/:time' do
       email = Base64.decode64(params[:encoded_email])
       analysis  = File.join(GeoDiver.users_dir, email, params['geo_db'],
@@ -101,6 +144,7 @@ module GeoDiver
       FileUtils.cp_r(analysis, share)
     end
 
+    # Remove a share link of a result page
     post '/rm/:encoded_email/:geo_db/:time' do
       email = Base64.decode64(params[:encoded_email])
       share = File.join(GeoDiver.public_dir, 'GeoDiver/Share', email,
@@ -108,35 +152,7 @@ module GeoDiver
       FileUtils.rm_r(share) if File.exist? share
     end
 
-
-    post '/load_geo_db' do
-      redirect to('auth/google_oauth2') if session[:user].nil?
-      LoadGeoData.init(params)
-      @geo_db_results = LoadGeoData.run
-      slim :load_db, layout: false
-    end
-
-    post '/analyse' do
-      redirect to('auth/google_oauth2') if session[:user].nil?
-      @run_uniq_id = GeoAnalysis.init(params, session[:user])
-      @results_link = GeoAnalysis.run
-      slim :results, layout: false
-    end
-
-    post '/gene_expression_url' do
-      redirect to('auth/google_oauth2') if session[:user].nil?
-      content_type :json
-      jsonfile = GeoAnalysis.get_expression_json(params, session[:user])
-      json = IO.read(jsonfile)
-      json
-    end
-
-    post '/interaction' do
-      redirect to('auth/google_oauth2') if session[:user].nil?
-      @interaction_img = GeoAnalysis.create_interactions(params)
-      slim :interactionNetwork, layout: false
-    end
-
+    # Delete a Results Page
     post '/delete_result' do 
       redirect to('auth/google_oauth2') if session[:user].nil?
       @results_url = File.join(GeoDiver.users_dir, session[:user].info['email'],
@@ -147,7 +163,7 @@ module GeoDiver
     get '/auth/:provider/callback' do
       content_type 'text/plain'
       session[:user] = env['omniauth.auth']
-      user_dir   = File.join(GeoDiver.users_dir, session[:user].info['email'])
+      user_dir    = File.join(GeoDiver.users_dir, session[:user].info['email'])
       user_public = File.join(GeoDiver.public_dir, 'GeoDiver/Users')
       FileUtils.mkdir(user_dir) unless Dir.exist?(user_dir)
       unless File.exist? File.join(user_public, session[:user].info['email'])
@@ -188,7 +204,7 @@ module GeoDiver
 
     not_found do
       status 404
-      slim :"500" # TODO: Create another Template
+      slim :"500", layout: :app_layout
     end
   end
 end

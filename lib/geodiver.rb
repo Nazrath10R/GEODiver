@@ -39,7 +39,7 @@ module GeoDiver
 
       # We don't validate port and host settings. If GeoDiver is run
       # self-hosted, bind will fail on incorrect values. If GeoDiver
-      # is run via Apache+Passenger, we don't need to worry.
+      # is run via Apache/Nginx + Passenger, we don't need to worry.
     end
 
     attr_reader :config, :temp_dir, :public_dir, :users_dir, :db_dir
@@ -93,17 +93,17 @@ module GeoDiver
     # run_unique_id is a unique id generated each time geodiver web app is
     # started.
     def init_public_dir
-      config[:gd_public_dir] = File.expand_path(config[:gd_public_dir])
+      config[:gd_public_dir] = File.expand_path config[:gd_public_dir]
       @run_unique_id = 'GD_' + Time.now.strftime('%Y%m%d-%H-%M-%S').to_s
       @public_dir = File.join(config[:gd_public_dir], @run_unique_id, 'public')
-      FileUtils.mkdir_p(@public_dir)
+      FileUtils.mkdir_p @public_dir
     end
 
     def init_users_and_db_dir
       @users_dir = File.expand_path('../Users', @public_dir)
       @db_dir = File.expand_path('../DBs', @public_dir)
-      FileUtils.mkdir_p(@users_dir)
-      FileUtils.mkdir_p(@db_dir)
+      FileUtils.mkdir_p @users_dir
+      FileUtils.mkdir_p @db_dir
     end
 
     def init_geo_dbs
@@ -117,12 +117,13 @@ module GeoDiver
     end
 
     def check_num_threads
-      num_threads = Integer(config[:num_threads])
-      fail NUM_THREADS_INCORRECT unless num_threads > 0
+      config[:num_threads] = Integer(config[:num_threads])
+      fail NUM_THREADS_INCORRECT unless config[:num_threads] > 0
 
-      logger.debug "Will use #{num_threads} threads to run GeoDiver."
-      if num_threads > 256
-        logger.warn "Number of threads set at #{num_threads} is unusually high."
+      logger.debug "Will use #{config[:num_threads]} threads to run GeoDiver."
+      if config[:num_threads] > 256
+        logger.warn "Number of threads set at #{config[:num_threads]} is" \
+                    " unusually high."
       end
     rescue
       raise NUM_THREADS_INCORRECT

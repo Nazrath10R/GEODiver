@@ -1,3 +1,4 @@
+require "base64"
 require 'forwardable'
 require 'json'
 
@@ -28,45 +29,44 @@ module GeoDiver
       def_delegators GeoDiver, :config, :logger, :public_dir, :users_dir,
                      :db_dir
 
-      def_delegators GeoDiver::LoadGeoData, :load_geo_db
-
       #
-      def init(params, user)
-        @user = user
-        @params = params
-        assert_params
-        setup_run_and_public_dir
-        save_params
-        @uniq_time
-      end
-
-      #
-      def run
+      def run(params, email, url, load_geo_db_thread)
+        init(params, email)
         # wait until geo db has been loaded in background thread
-        load_geo_db.join unless load_geo_db.nil?
+        load_geo_db_thread.join unless load_geo_db_thread.nil?
         run_analysis
-        compress_files
-        generate_relative_results_link(@uniq_time)
-      end
-
-      def get_expression_json(params, user)
-        @params = params
-        assert_gene_id_present
-        run_dir = run_expression_analysis(user)
-        File.join(run_dir, "dgea_#{@params[:gene_id]}.json")
-      end
-
-      def create_interactions(params)
-        @params = params 
-        File.join(run_interaction_analysis,
-                  "#{@params[:path_id]}.gage_pathway.multi.png")
+        compress_files # TODO move compression to a background Thread
+        results = generate_results_hash(url)
+        save_results_to_file(results)
+        results
       end
 
       private
 
+      def generate_results_hash(url)
+        { geo_db: @params['geo_db'],
+          user: encode_email,
+          uniq_result_id: @uniq_time,
+          results_url: generate_results_url(url),
+          share_url: generate_share_url(url),
+          assets_path: generate_relative_link(url),
+          meta_data: parse_meta_json,
+          params: @params }
+      end
+
+      #
+      def init(params, email)
+        @params = params
+        @email  = email
+        assert_params
+        setup_run_and_public_dir
+        @uniq_time
+      end
+
       #
       def assert_params
         assert_geo_db_present
+        # TODO assert other Params
       end
 
       #
@@ -76,25 +76,17 @@ module GeoDiver
         fail ArgumentError, 'No GEO database provided.'
       end
 
-      def assert_gene_id_present
-        logger.debug('Asserting Gene ID is present.')
-        return unless @params['gene_id'].nil? || @params['gene_id'].empty?
-        fail ArgumentError, 'No Gene Id provided.'
-      end
-
       #
       def setup_run_and_public_dir
         @uniq_time = Time.new.strftime('%Y-%m-%d_%H-%M-%S_%L-%N').to_s
-        @run_dir = File.join(users_dir, @user.info['email'], @params['geo_db'],
-                             @uniq_time)
+        @run_dir = File.join(users_dir, @email, @params['geo_db'], @uniq_time)
         logger.debug("Creating Run Directory: #{@run_dir}")
         FileUtils.mkdir_p(@run_dir)
       end
 
-      def save_params
-        File.open(File.join(@run_dir, 'params.json'), 'w') do |f|
-          f.puts @params.to_json
-        end
+      def save_results_to_file(results)
+        output_params_json = File.join(@run_dir, 'params.json')
+        File.open(output_params_json, 'w') { |f| f.puts results.to_json }
       end
 
       def run_analysis
@@ -120,6 +112,17 @@ module GeoDiver
         system(overview_cmd)
       end
 
+      #
+      def run_dgea
+        logger.debug("Running CMD: #{dgea_cmd}")
+        system(dgea_cmd)
+      end
+
+      def run_gage
+        logger.debug("Running CMD: #{gsea_cmd}")
+        system(gsea_cmd)
+      end
+
       def overview_cmd
         "Rscript #{File.join(GeoDiver.root, 'RCore/overview.R')}" \
         " --dbrdata #{dbrdata} --rundir '#{@run_dir}/'" \
@@ -128,50 +131,28 @@ module GeoDiver
         " --popA '#{@params['groupa'].join(',')}'" \
         " --popB '#{@params['groupb'].join(',')}'" \
         " --popname1 'Group1' --popname2 'Group2'" \
-        " --distance '#{@params['heatmap_distance_method']}'" \
-        " --clustering '#{@params['heatmap_clustering_method']}'" \
         ' --dev TRUE'
-      end
-
-      #
-      def assert_overview_output
-        true
-      end
-
-      #
-      def run_dgea
-        logger.debug("Running CMD: #{dgea_cmd}")
-        system(dgea_cmd)
       end
 
       #
       def dgea_cmd
         "Rscript #{File.join(GeoDiver.root, 'RCore/dgea.R')}" \
         " --dbrdata #{dbrdata} --rundir '#{@run_dir}/'" \
-        " --analyse 'Toptable,Heatmap,Volcano'" \
+        " --analyse '#{analyses_to_carry_out.join(',')}'" \
         " --accession #{@params['geo_db']} --factor '#{@params['factor']}'" \
         " --popA '#{@params['groupa'].join(',')}'" \
         " --popB '#{@params['groupb'].join(',')}'" \
         " --popname1 'Group1' --popname2 'Group2'" \
-        " --topgenecount #{@params['number_top_genes']} " \
+        " --topgenecount #{@params['dgea_number_top_genes']} " \
         ' --foldchange 0 --thresholdvalue 0' \
-        " --distance '#{@params['heatmap_distance_method']}'" \
-        " --clusterby '#{@params['heatmap_clustering_method']}'" \
-        " --heatmaprows #{@params['heatmap_rows']} " \
-        " --adjmethod '#{@params['volcano_pValue_cutoff']}'" \
-        " --dendrow #{(@params['cluster_by_genes'] == 'on')} "\
-        " --dendcol #{(@params['cluster_by_samples'] == 'on')} "\
+        " --distance '#{@params['dgea_heatmap_distance_method']}'" \
+        " --clustering '#{@params['dgea_heatmap_clustering_method']}'" \
+        " --clusterby '#{dgea_clusterby_method}'" \
+        " --heatmaprows #{@params['dgea_heatmap_rows']} " \
+        " --adjmethod '#{@params['dgea_volcano_pValue_cutoff']}'" \
+        " --dendrow #{(@params['dgea_cluster_by_genes'] == 'on')} "\
+        " --dendcol #{(@params['dgea_cluster_by_samples'] == 'on')} "\
         ' --dev TRUE'
-      end
-
-      #
-      def assert_dgea_output
-        true
-      end
-
-      def run_gage
-        logger.debug("Running CMD: #{gsea_cmd}")
-        system(gsea_cmd)
       end
 
       def gsea_cmd
@@ -180,17 +161,15 @@ module GeoDiver
         " --accession #{@params['geo_db']} --factor '#{@params['factor']}'" \
         " --popA '#{@params['groupa'].join(',')}'" \
         " --popB '#{@params['groupb'].join(',')}'" \
-        " --comparisontype 'ExpVsCtrl' --genesettype 'KEGG' --geotype 'BP'" \
-        " --distance '#{@params['heatmap_distance_method']}'" \
-        " --clusterby '#{@params['heatmap_clustering_method']}'" \
-        " --heatmaprows #{@params['heatmap_rows']} " \
-        " --dendrow #{(@params['cluster_by_genes'] == 'on')} "\
-        " --dendcol #{(@params['cluster_by_samples'] == 'on')} "\
+        " --comparisontype '#{@params['gsea_type']}'"\
+        " --genesettype '#{@params['gsea_dataset']}'" \
+        " --distance '#{@params['gsea_heatmap_distance_method']}'" \
+        " --clustering '#{@params['gsea_heatmap_clustering_method']}'" \
+        " --clusterby '#{gage_clusterby_method}'" \
+        " --heatmaprows #{@params['gsea_heatmap_rows']} " \
+        " --dendrow #{(@params['gsea_cluster_by_genes'] == 'on')} "\
+        " --dendcol #{(@params['gsea_cluster_by_samples'] == 'on')} "\
         ' --dev TRUE'
-      end
-
-      def assert_gsea_output
-        true
       end
 
       def compress_files
@@ -199,53 +178,63 @@ module GeoDiver
         system("#{cmd}")
       end
 
+      def analyses_to_carry_out
+        analyses = []
+        analyses << 'Toptable' if @params['dgea_toptable'] == 'on'
+        if @params['dgea_heatmap'] == 'on' || @params['gsea_heatmap'] == 'on'
+          analyses << 'Heatmap' 
+        end
+        analyses << 'Volcano' if @params['dgea_volcano'] == 'on'
+        analyses
+      end
+
+      def dgea_clusterby_method
+        (@params['dgea_cluster_based_on'] == 'on') ? 'Complete' : 'Toptable'
+      end
+
+      def gage_clusterby_method
+        (@params['gsea_cluster_based_on'] == 'on') ? 'Complete' : 'Toptable'
+      end
+
+      #
+      def assert_overview_output
+        true
+      end
+
+      #
+      def assert_dgea_output
+        true
+      end
+
+      def assert_gsea_output
+        true
+      end
+
       def dbrdata
         File.join(db_dir, @params['geo_db'], "#{@params['geo_db']}.RData")
       end
 
-      def generate_relative_results_link(uniq_time)
-        File.join('GeoDiver/Users/', @user.info['email'], @params['geo_db'],
-                  uniq_time)
+      def generate_relative_link(url)
+        "#{url}/GeoDiver/Users/#{@email}/#{@params['geo_db']}/#{@uniq_time}"
       end
 
-      def run_expression_analysis(user)
-        run_dir = File.join(users_dir, user.info['email'], @params['geo_db'],
-                            @params['result_id'])
-        cmd = expression_cmd(run_dir)
-        logger.debug("Running CMD: #{cmd}")
-        system(cmd)
-        assert_expression_output
-        run_dir
+      def generate_results_url(url)
+        "#{url}/result/#{encode_email}/#{@params['geo_db']}/#{@uniq_time}"
       end
 
-      def expression_cmd(run_dir)
-        "Rscript #{File.join(GeoDiver.root, 'RCore/dgea_expression.R')}" \
-        " --rundir '#{run_dir}/' --geneid '#{@params[:gene_id]}'"
+      def generate_share_url(url)
+        "#{url}/sh/#{encode_email}/#{@params['geo_db']}/#{@uniq_time}"
       end
 
-      def assert_expression_output
-        true
+      def parse_meta_json
+        meta_json_file = File.join(db_dir, @params['geo_db'],
+                                   "#{@params['geo_db']}.json")
+        meta_file_content = IO.read meta_json_file
+        JSON.parse(meta_file_content)
       end
 
-      def run_interaction_analysis
-        run_dir = File.join(users_dir, @user.info['email'], @params['geo_db'],
-                            @params['result_id'])
-        output_file = File.join(run_dir, 
-                                "#{@params[:path_id]}.gage_pathway.multi.png")
-        unless File.exist? output_file
-          cmd = interaction(run_dir)
-          logger.debug("Running CMD: #{cmd}")
-          Dir.chdir(run_dir) { system(cmd) }
-          FileUtils.rm(File.join(run_dir, "#{@params[:path_id]}.png")) if File.exist? File.join(run_dir, "#{@params[:path_id]}.png")
-          FileUtils.rm(File.join(run_dir, "#{@params[:path_id]}.xml")) if File.exist? File.join(run_dir, "#{@params[:path_id]}.xml")
-        end
-        assert_expression_output
-        generate_relative_results_link(@params['result_id'])
-      end
-
-      def interaction(run_dir)
-        "Rscript #{File.join(GeoDiver.root, 'RCore/gage_interaction_network.R')}" \
-        " --rundir '#{run_dir}/' --pathid '#{@params[:path_id]}'"
+      def encode_email
+        Base64.encode64(@email).chomp
       end
     end
   end
