@@ -57,12 +57,6 @@ parser <- add_argument(parser, "--popname1",
 parser <- add_argument(parser, "--popname2",
                        help = "name for Group B")
 
-# Clustering
-parser <- add_argument(parser, "--distance",
-                       help = "Distance measurement methods")
-parser <- add_argument(parser, "--clustering",
-                       help = "HCA clustering methods")
-
 # allow arguments to be run via the command line
 argv   <- parse_args(parser)
 
@@ -83,23 +77,6 @@ pop.name1       <- argv$popname1
 pop.name2       <- argv$popname2
 pop.colour1     <- "#e199ff" # Purple   
 pop.colour2     <- "#96ca00" # Green
-
-# Clustering
-distance_options <- c("euclidean", "maximum", "manhattan", "canberra",
-                      "binary", "minkowski")
-if (argv$distance %in% distance_options){
-  dist.method <- argv$distance
-} else {
-  dist.method <- "euclidean"
-}
-
-clustering_options <- c("ward.D", "ward.D2", "single", "complete", "average",
-                        "mcquitty", "median", "centroid")
-if (argv$clustering %in% clustering_options){
-  clust.method <- argv$clustering
-} else {
-  clust.method <- "average"
-}
 
 if (!is.na(argv$dev)) {
   isdebug <- argv$dev
@@ -134,22 +111,9 @@ samples.boxplot <- function(data, pop.colours, pop.names, path){
   ggsave(filename, plot = boxplot, width = 8, height = 4)
 
   if(isdebug){
-    print("Boxplot has been produced")
+    print("Overview: Boxplot has been produced")
   }
 }
-
-# Calculate Outliers Probabilities/ Dissimilarities
-outlier.probability <- function(X, dist.method = "euclidean", clust.method = "average"){
-  # Rank outliers using distance and clustering parameters
-  o <- outliers.ranking(t(X),test.data = NULL, method.pars = NULL,
-                        method = "sizeDiff", # Outlier finding method
-                        clus = list(dist = dist.method,
-                                    alg  = "hclust",
-                                    meth = clust.method))
-  if (isdebug) { print("Outliers have been identified") }
-  return(o$prob.outliers)
-}
-
 
 # Principal Component Analysis
 get.pcdata <- function(Xpca){
@@ -182,7 +146,7 @@ get.pcplotdata <- function(Xpca, populations){
   pc <- unlist(Xscores, recursive = FALSE)
   complete.data <- c(split(sample.names, populations),pc)
     
-  if (isdebug) { print("PCA has been calculated") }
+  if (isdebug) { print("Overview: PCA has been calculated") }
   return(complete.data)
 }
 
@@ -192,8 +156,8 @@ get.pcplotdata <- function(Xpca, populations){
 #############################################################################
 
 if(isdebug){
-  print("GeoDiver is starting")
-  print("Libraries have been loaded")
+  print("Overview: GeoDiver is starting")
+  print("Overview: Libraries have been loaded")
 }
 
 if (file.exists(dbrdata)){
@@ -226,7 +190,7 @@ if (scalable(X)) {
   X <- log2(X)
 }
 
-if (isdebug){print("Data Preprocessed!")}
+if (isdebug){print("Overview: Data Preprocessed!")}
 
 #############################################################################
 #                        Two Population Preparation                         #
@@ -267,7 +231,7 @@ data <- within(melt(X), {
   Groups     <- expression.info[Var2, "population.colour"]
 })
 
-if (isdebug) { print("Factors and Populations have been set") }
+if (isdebug) { print("Overview: Factors and Populations have been set") }
 
 #############################################################################
 #                        Function Calling                                 #
