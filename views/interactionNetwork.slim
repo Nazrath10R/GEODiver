@@ -6,4 +6,4 @@ tr.child id="#{params[:path_id]}ChildRow"
           .light-blue-text.text-darken-3.heading2
             strong  View more information on KEGG 
             i.material-icons  open_in_new
-          img src="#{File.join(request.base_url, @interaction_img)}" width="100%" /
+          img src="#{request.base_url}/#{@interaction_img}" width="100%" /

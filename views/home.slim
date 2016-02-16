@@ -9,7 +9,10 @@ html lang="en"
   body
     nav.white role="navigation" 
       .nav-wrapper.container
-        a#logo-container.brand-logo href="#"  GeoDiver
+        span.hide-on-med-and-down.logo
+          img height="64" src="#{uri('assets/img/logo.svg')}" alt="GeoDiver Logo"
+        a#logo-container.brand-logo href="#"
+          | &nbsp;GeoDiver
         ul.right.hide-on-med-and-down
           li
             a href="/auth/google_oauth2" 
@@ -25,9 +28,9 @@ html lang="en"
         .container
           br/
           br/
-          h1.header.center.teal-text.text-lighten-2 style="font-weight:500;color: rgba(15,4,212,0.93333)" GeoDiver
+          h1.header.center.main_front_page_header GeoDiver
           .row.center
-            h5.header.col.s12.light style="font-weight:500;color: rgba(15,4,212,0.93333)"   An easy to use web tool for analysing GEO datasets.
+            h5.header.col.s12.light.parrallax_writing   An easy to use web tool for analysing GEO datasets.
           .row.center
             a#download-button.btn-large.waves-effect.waves-light.teal.lighten-1 href="analyse"  Dive In
           br/
@@ -60,7 +63,7 @@ html lang="en"
       .section.no-pad-bot
         .container
           .row.center
-            h5.header.col.s12.light style="font-weight:500;color: rgba(15,4,212,0.93333)" Differential Gene Expression and Gene Set Enrichment Analysis.
+            h5.header.col.s12.light.parrallax_writing  Differential Gene Expression and Gene Set Enrichment Analysis.
       .parallax
         img alt=("Unsplashed background img 2") src="#{uri('assets/img/background2.jpg')}" /
     .container
@@ -75,7 +78,7 @@ html lang="en"
       .section.no-pad-bot
         .container
           .row.center
-            h5.header.col.s12.light style="font-weight:500;color: rgba(15,4,212,0.93333)"  Store, retrieve and share your results 
+            h5.header.col.s12.light.parrallax_writing  Store, retrieve and share your results 
       .parallax
         img alt=("Unsplashed background img 3") src="#{uri('assets/img/background3.jpg')}" /
     footer.page-footer.teal
