@@ -43,6 +43,8 @@ if (!GD) {
         },
       },
       submitHandler: function(form) {
+        $('.card-action').remove();
+        $('#results_section').empty();
         var geo_db = $('input[name=geo_db]').val();
         $('#model_header_text').text('Loading GEO Dataset: ' + geo_db);
         $('#model_text').text('This should take a few seconds. Please leave this page open');
@@ -52,16 +54,16 @@ if (!GD) {
           url: '/load_geo_db',
           data: $('#load_geo_db').serialize(),
           success: function(response) {
-            $('.card-action').remove();
-            $('#results_section').empty();
             $( response ).insertAfter( "#load_geo_card" );
             $('#geo_db_summary').html(response);
             $('#geo_db_summary').show();
             $('.adv_param_collapsible').collapsible();
             $("input:radio[name=factor]:first").attr('checked', true);
             $('#' + $("input:radio[name=factor]:first").attr('id') + '_select').show();
+            GD.addAdvParamLogic();
             GD.addFactorToggle();
             $('select').material_select();
+            $('.tooltipped').tooltip();
             GD.addDataSetInfo();
             GD.analyseValidation();
             $('#loading_modal').closeModal();
@@ -79,6 +81,7 @@ if (!GD) {
     $('#analyse').validate({
       rules: {},
       submitHandler: function(form) {
+        $('#results_section').empty();
         var geo_db = $('input[name=geo_db]').val();
         $('#model_header_text').text('Analysing GEO Dataset: ' + geo_db);
         $('#model_text').text('This should take a few minutes. Please leave this page open');
@@ -90,10 +93,14 @@ if (!GD) {
           success: function(response) {
             $('#results_section').html(response);
             $('#results_section').show();
+            $('#pca_tabs').tabs(); // init material tabs
             $('#results_tabs').tabs(); // init material tabs
             GD.createPlots();
             $('.materialboxed').materialbox(); // init materialbox
             $('#loading_modal').closeModal();
+            $('html, body').animate({
+                scrollTop: $('#results_section').offset().top
+            }, 0);
           },
           error: function(e, status) {
             GD.ajaxError(e, status);
@@ -111,7 +118,7 @@ if (!GD) {
     var geoDb = currentRow.closest('.results_card').data('geo_db');
     $.ajax({
       type: 'POST',
-      url: '/gene_expression_url',
+      url: '/gene_expression_graph',
       data: {gene_id: geneId, result_id: resultId, geo_db: geoDb},
       success: function(response) {
         currentRow.addClass('parent');
@@ -133,7 +140,7 @@ if (!GD) {
     var geoDb = currentRow.closest('.results_card').data('geo_db');
     $.ajax({
       type: 'POST',
-      url: '/interaction',
+      url: '/interaction_image',
       data: {path_id: pathId, result_id: resultId, geo_db: geoDb},
       success: function(response) {
         currentRow.addClass('parent');
@@ -161,17 +168,30 @@ if (!GD) {
   };
 
   GD.loadPcRedrawValidation = function() {
-    $('#pca_redraw').validate({
+    $('#pca3d_redraw').validate({
       rules: {},
       submitHandler: function(form, event) {
         event.preventDefault(); // because we're not submitting at all
         $('#principle_plot').empty();
-        var x = $('select[name=PCoption1]').val();
-        var y = $('select[name=PCoption2]').val();
-        var z = $('select[name=PCoption3]').val();
+        var x = $('select[name=PC3doption1]').val();
+        var y = $('select[name=PC3doption2]').val();
+        var z = $('select[name=PC3doption3]').val();
         var jsonFile = $('#overview').data("overview-json");
         $.getJSON(jsonFile, function(json) {
-          GD.createPCAScatterPlot(json.pcdata, x, y, z);
+          GD.create3dPCAScatterPlot(json.pcdata, x, y, z);
+        });
+      }
+    });
+    $('#pca2d_redraw').validate({
+      rules: {},
+      submitHandler: function(form, event) {
+        event.preventDefault(); // because we're not submitting at all
+        $('#principle_plot').empty();
+        var x = $('select[name=PC2doption1]').val();
+        var y = $('select[name=PC2doption2]').val();
+        var jsonFile = $('#overview').data("overview-json");
+        $.getJSON(jsonFile, function(json) {
+          GD.create3dPCAScatterPlot(json.pcdata, x, y, z);
         });
       }
     });
@@ -184,9 +204,19 @@ if (!GD) {
     var jsonFile = $('#overview').data("overview-json");
     $.getJSON(jsonFile, function(json) {
       pcaPlot = GD.createPCAPLOT(json.pc.cumVar, json.pc.expVar, json.pc.pcnames);
-      pcaScatterPlot = GD.createPCAScatterPlot(json.pcdata, 'PC1', 'PC2', 'PC3');
+      pca2dScatterPlot = GD.create2dPCAScatterPlot(json.pcdata, 'PC1', 'PC2');
+      pca3dScatterPlot = GD.create3dPCAScatterPlot(json.pcdata, 'PC1', 'PC2', 'PC3');
+
       GD.initialiatizePcaScatterPlot(json.pc.pcnames);
       $('select').material_select();
+    });
+
+    $('#pca_tabs').on('click', '.tab a', function() {
+      if ($(this).attr('href') === '#pca2d' ) {
+        Plotly.Plots.resize(pca2dScatterPlot);
+      } else {
+        Plotly.Plots.resize(pca3dScatterPlot);  
+      }
     });
 
     var dgeaJsonFile = $('#DGEA').data("dgea-json");
@@ -202,40 +232,41 @@ if (!GD) {
     window.onresize = function() {
       Plotly.Plots.resize(pcaPlot);
       Plotly.Plots.resize(volcanoPlot);
-      Plotly.Plots.resize(pcaScatterPlot);
+      Plotly.Plots.resize(pca2dScatterPlot);
+      Plotly.Plots.resize(pca3dScatterPlot);
     };
   };
 
-  GD.createPCAScatterPlot = function(pcdata, x, y, z) {
+  GD.create2dPCAScatterPlot = function(pcdata, x, y) {
     var group1, group2, data, layout, parentWidth, PCAplotGd3, pcaPlot;
-    if (typeof z === "undefined") {
-      group1 = { x: pcdata[ x + '.Group1'], y: pcdata[y + '.Group1'], text: pcdata.Group1, type: 'scatter', mode: 'markers', name: 'Group1', marker: { symbol: 'circle' } };
-      group2 = { x: pcdata[ x + '.Group2'], y: pcdata[y + '.Group2'], text: pcdata.Group2, type: 'scatter', mode: 'markers', name: 'Group2', marker: { symbol: 'square' } };
-      data = [group1, group2];
-      layout = { xaxis: { title: x }, yaxis: { title: y }};
+    group1 = { x: pcdata[ x + '.Group1'], y: pcdata[y + '.Group1'], text: pcdata.Group1, type: 'scatter', mode: 'markers', name: 'Group1', marker: { symbol: 'circle' } };
+    group2 = { x: pcdata[ x + '.Group2'], y: pcdata[y + '.Group2'], text: pcdata.Group2, type: 'scatter', mode: 'markers', name: 'Group2', marker: { symbol: 'square' } };
+    data = [group1, group2];
+    layout = { xaxis: { title: x }, yaxis: { title: y }};
 
-      parentWidth = 100;
-      PCAplotGd3 = Plotly.d3.select('#principle_plot')
-                         .style({width: parentWidth + '%',
-                                'margin-left': (100 - parentWidth) / 2 + '%'});
-      pcaPlot = PCAplotGd3.node();
-      Plotly.newPlot(pcaPlot, data, layout);
-      return pcaPlot;
+    parentWidth = 100;
+    PCAplotGd3 = Plotly.d3.select('#pca2d_plot')
+                       .style({width: parentWidth + '%',
+                              'margin-left': (100 - parentWidth) / 2 + '%'});
+    pcaPlot = PCAplotGd3.node();
+    Plotly.newPlot(pcaPlot, data, layout);
+    return pcaPlot;
+  };
 
-    } else {
-      group1 = { x: pcdata[ x + '.Group1'], y: pcdata[y + '.Group1'], z: pcdata[ z + '.Group1'], text: pcdata.Group1, type: 'scatter3d', mode: 'markers', name: 'Group1', marker: { symbol: 'circle' } };
-      group2 = { x: pcdata[ x + '.Group2'], y: pcdata[y + '.Group2'], z: pcdata[ z + '.Group2'], text: pcdata.Group2, type: 'scatter3d', mode: 'markers', name: 'Group2', marker: { symbol: 'square' } };
-      data = [group1, group2];
-      layout = { xaxis: { title: x }, yaxis: { title: y }, zaxis: {title: z} };
+  GD.create3dPCAScatterPlot = function(pcdata, x, y, z) {
+    var group1, group2, data, layout, parentWidth, PCAplotGd3, pcaPlot;
+    group1 = { x: pcdata[ x + '.Group1'], y: pcdata[y + '.Group1'], z: pcdata[ z + '.Group1'], text: pcdata.Group1, type: 'scatter3d', mode: 'markers', name: 'Group1', marker: { symbol: 'circle' } };
+    group2 = { x: pcdata[ x + '.Group2'], y: pcdata[y + '.Group2'], z: pcdata[ z + '.Group2'], text: pcdata.Group2, type: 'scatter3d', mode: 'markers', name: 'Group2', marker: { symbol: 'square' } };
+    data = [group1, group2];
+    layout = { xaxis: { title: x }, yaxis: { title: y }, zaxis: {title: z} };
 
-      parentWidth = 100;
-      PCAplotGd3 = Plotly.d3.select('#principle_plot')
-                         .style({width: parentWidth + '%',
-                                'margin-left': (100 - parentWidth) / 2 + '%'});
-      pcaPlot = PCAplotGd3.node();
-      Plotly.newPlot(pcaPlot, data, layout);
-      return pcaPlot;
-    }
+    parentWidth = 100;
+    PCAplotGd3 = Plotly.d3.select('#pca3d_plot')
+                       .style({width: parentWidth + '%',
+                              'margin-left': (100 - parentWidth) / 2 + '%'});
+    pcaPlot = PCAplotGd3.node();
+    Plotly.newPlot(pcaPlot, data, layout);
+    return pcaPlot;
   };
 
   GD.createPCAPLOT = function(cumVar, expVar, pcaNames) {
@@ -358,11 +389,15 @@ if (!GD) {
 
   GD.initialiatizePcaScatterPlot = function(pcnames) {
     $.each(pcnames, function(key,value) {   
-      $('#PCoption1').append($("<option></option>")
+      $('#PC2doption1').append($("<option></option>")
         .attr("value", value).text(value));
-      $('#PCoption2').append($("<option></option>")
+      $('#PC2doption2').append($("<option></option>")
         .attr("value", value).text(value));
-      $('#PCoption3').append($("<option></option>")
+      $('#PC3doption1').append($("<option></option>")
+        .attr("value", value).text(value));
+      $('#PC3doption2').append($("<option></option>")
+        .attr("value", value).text(value));
+      $('#PC3doption3').append($("<option></option>")
         .attr("value", value).text(value));
     });
     GD.loadPcRedrawValidation();
@@ -375,6 +410,31 @@ if (!GD) {
       if ('#' + $('.select_factors:visible').attr('id') !== target) {
         $('.select_factors').hide();
         $(target).show();
+      }
+    });
+  };
+
+  GD.addAdvParamLogic = function() {
+    GD.show_hide_div('#DGEA_input', '#DGEAparams');
+    GD.show_hide_div('#GSEA_input', '#GSEAparams');
+    GD.show_hide_div('#dgea_toptable', '#dgea_toptable_params');    
+    GD.show_hide_div('#dgea_heatmap', '#dgea_heatmap_params');    
+    GD.show_hide_div('#gsea_heatmap', '#gsea_heatmap_params');    
+    $("input:radio[name=gsea_type]").click(function() {
+      if ( $("input:radio[name=gsea_type]:checked").val() == 'ExpVsCtrl') {
+        $('#gage_select_control').show();
+      } else {
+        $('#gage_select_control').hide();
+      }
+    });
+  };
+
+  GD.show_hide_div = function(checkbox, div) {
+    $(checkbox).change(function(){
+      if($(this).prop("checked")) {
+        $(div).show();
+      } else {
+        $(div).hide();
       }
     });
   };
@@ -398,7 +458,6 @@ if (!GD) {
     });
   };
 }());
-
 
 (function($) {
   $(function() {
