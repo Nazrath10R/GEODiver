@@ -39,7 +39,7 @@ cd GEODiver
 rake install 
 
 # Start the web app
-passenger start --envvar GOOGLE_KEY=113114282317-af1ph7hqm7uvhbc289gpu5fteuo8i4a3.apps.googleusercontent.com --envvar GOOGLE_SECRET=_QrM-_WoTNjcreNRAw6MXfZE -p 9292 -e production
+passenger start --envvar GOOGLE_KEY= --envvar GOOGLE_SECRET= -p 9292 -e production --sticky-sessions -d
 ```
 
 ##### Running From Source (Not Recommended)
