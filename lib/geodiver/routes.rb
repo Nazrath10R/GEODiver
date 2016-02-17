@@ -98,7 +98,15 @@ module GeoDiver
       json_file = File.join(GeoDiver.public_dir, 'GeoDiver/Share/', email,
                             params['geo_db'], params['time'], 'params.json')
       @results  = JSON.parse( IO.read( json_file) )
-      slim :single_results, layout: :app_layout
+      slim :share_result, layout: false
+    end
+
+    get '/faq' do 
+      if session[:user].nil?
+        slim :not_logged_in_faq
+      else
+        slim :faq, layout: :app_layout
+      end
     end
 
     # Load the Geo Database
@@ -141,6 +149,8 @@ module GeoDiver
                         params['geo_db'])
       FileUtils.mkdir_p(share) unless File.exist? share
       FileUtils.cp_r(analysis, share)
+      share_file = File.join(analysis, '.share')
+      FileUtils.touch(share_file) unless File.exist? share_file 
     end
 
     # Remove a share link of a result page
@@ -149,6 +159,9 @@ module GeoDiver
       share = File.join(GeoDiver.public_dir, 'GeoDiver/Share', email,
                         params['geo_db'], params['time'])
       FileUtils.rm_r(share) if File.exist? share
+      share_file  = File.join(GeoDiver.users_dir, email, params['geo_db'],
+                               params['time'], '.share')
+      FileUtils.rm(share_file) if File.exist? share_file
     end
 
     # Delete a Results Page
