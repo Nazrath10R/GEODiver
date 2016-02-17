@@ -56,8 +56,8 @@ if (!GD) {
         $('.card-action').remove();
         $('#results_section').empty();
         var geo_db = $('input[name=geo_db]').val();
-        $('#model_header_text').text('Loading GEO Dataset: ' + geo_db);
-        $('#model_text').text('This should take a few seconds. Please leave this page open');
+        $('#modal_header_text').text('Loading GEO Dataset: ' + geo_db);
+        $('#modal_text').text('This should take a few seconds. Please leave this page open');
         $('#loading_modal').openModal({ dismissible: false });
         $.ajax({
           type: 'POST',
@@ -99,8 +99,8 @@ if (!GD) {
         $('.select_factors_validations').text('');
         $('#results_section').empty();
         var geo_db = $('input[name=geo_db]').val();
-        $('#model_header_text').text('Analysing GEO Dataset: ' + geo_db);
-        $('#model_text').text('This should take a few minutes. Please leave this page open');
+        $('#modal_header_text').text('Analysing GEO Dataset: ' + geo_db);
+        $('#modal_text').text('This should take a few minutes. Please leave this page open');
         $('#loading_modal').openModal({ dismissible: false});
         $.ajax({
           type: 'POST',
@@ -113,10 +113,15 @@ if (!GD) {
             $('#results_tabs').tabs(); // init material tabs
             GD.createPlots();
             $('.materialboxed').materialbox(); // init materialbox
+            $('.modal-trigger').leanModal();
+            GD.download_all_results();
+            GD.delete_result();
+            GD.share_result();
+            GD.remove_share();
             $('#loading_modal').closeModal();
             $('html, body').animate({
                 scrollTop: $('#results_section').offset().top
-            }, 0);
+            });
           },
           error: function(e, status) {
             GD.ajaxError(e, status);
@@ -127,8 +132,8 @@ if (!GD) {
   };
 
   GD.geneExpressionAjax = function(currentRow, geneId) {
-    $('#model_header_text').text('Loading Graphics for Gene: ' + geneId);
-    $('#model_text').text('This should take a few seconds. Please leave this page open');
+    $('#modal_header_text').text('Loading Graphics for Gene: ' + geneId);
+    $('#modal_text').text('This should take a few seconds. Please leave this page open');
     $('#loading_modal').openModal({ dismissible: false});
     var resultId = currentRow.closest('.results_card').data('result');
     var geoDb    = currentRow.closest('.results_card').data('geodb');
@@ -150,8 +155,8 @@ if (!GD) {
   };
 
   GD.interactionNetworkAjax = function(currentRow, pathId) {
-    $('#model_header_text').text('Loading Graphics for GeneSet: ' + pathId);
-    $('#model_text').text('This should take a few seconds. Please leave this page open');
+    $('#modal_header_text').text('Loading Graphics for GeneSet: ' + pathId);
+    $('#modal_text').text('This should take a few seconds. Please leave this page open');
     $('#loading_modal').openModal({ dismissible: false});
     var resultId = currentRow.closest('.results_card').data('result');
     var geoDb    = currentRow.closest('.results_card').data('geodb');
@@ -379,8 +384,8 @@ if (!GD) {
     });
 
     $('#' + tableWrapperId).on('click', '.download-top-table', function() {
-        $('#model_header_text').text('Creating Download Link');
-        $('#model_text').text('This should take a few seconds. Please leave this page open');
+        $('#modal_header_text').text('Creating Download Link');
+        $('#modal_text').text('This should take a few seconds. Please leave this page open');
         $('#loading_modal').openModal({ dismissible: false});
         $.fileDownload($(this).attr('href'), {
             successCallback: function(url) {
@@ -488,6 +493,109 @@ if (!GD) {
     });
   };
 
+  GD.download_all_results = function () {
+    $('#results_section').on('click', '#download-all-results', function(event) {
+      event.preventDefault();
+      $('#modal_header_text').text('Creating Download Link');
+      $('#modal_text').text('This should take a few seconds. Please leave this page open');
+      $('#loading_modal').openModal({ dismissible: false});
+      $.fileDownload($(this).data('download'), {
+          successCallback: function(url) {
+            $('#loading_modal').closeModal();
+          },
+          failCallback: function(responseHtml, url) {
+            $('#loading_modal').closeModal();
+          }
+      });
+      $('#loading_modal').closeModal();
+      return false; //this is critical to stop the click event which will trigger a normal file download!
+    });
+  };
+
+  GD.delete_result = function () {
+    $('#results_section').on('click', '#delete_results', function(event) {
+      $('#delete_modal').openModal();
+      var resultId = $(this).closest('.card').data('result');
+      var geoDb =  $(this).closest('.card').data('geodb');
+      $('#delete_modal').attr('data-result', resultId);
+      $('#delete_modal').attr('data-geodb', geoDb);
+    });
+
+    $('.delete-results').click(function(event) {
+      $('#modal_header_text').text('Deleting Result');
+      $('#modal_text').text('This should take a few seconds. Please leave this page open');
+      $('#loading_modal').openModal({ dismissible: false});
+      var resultId = $('#delete_modal').data('result');
+      var geoDb =  $('#delete_modal').data('geodb');
+      $.ajax({
+        type: 'POST',
+        url: '/delete_result',
+        data: {result_id: resultId, geo_db: geoDb},
+        success: function(response) {
+          location.reload();
+        },
+        error: function(e, status) {
+          GD.ajaxError(e, status);
+        }
+      });
+    });
+  };
+
+  GD.share_result = function () {
+    $('#results_section').on('click', '#share_btn', function() {
+      var share_link =  $(this).closest('.card').data('share-link');
+      $('#share_the_link_btn').show();
+      $('#share_btn').hide();
+      $('#share_link_input').val(share_link);
+      $('#share_link_input').prop("readonly", true);
+      $('#share_modal').openModal();
+      $('#share_modal').attr('data-share-link', share_link);
+      $('#share_link_input').select();
+      $.ajax({
+        type: 'POST',
+        url: share_link,
+        error: function(e, status) {
+          GD.ajaxError(e, status);
+        }
+      });
+    });
+    $('#results_section').on('click', '#share_the_link_btn', function() {
+      var share_link =  $(this).closest('.card').data('share-link');
+      $('#share_link_input1').val(share_link);
+      $('#share_link_input1').prop("readonly", true);
+      $('#share_the_link_modal').openModal();
+      $('#share_the_link_modal').attr('data-share-link', share_link);
+      $('#share_link_input1').select();
+    });
+
+    $(".share_link_input").focus(function() {
+      $(this).select();
+      // Work around Chrome's little problem
+      $(this).mouseup(function() {
+          // Prevent further mouseup intervention
+          $(this).unbind("mouseup");
+          return false;
+      });
+    });
+  };
+
+  GD.remove_share = function () {
+    $('.remove_link').click(function(event) {
+      var share_link =  $(this).closest('.modal').data('share-link');
+      var remove_link = share_link.replace(/\/sh\//, '/rm/');
+      $('#share_the_link_btn').hide();
+      $('#share_btn').show();
+      $('#share_modal').closeModal();
+      $('#share_the_link_modal').closeModal();
+      $.ajax({
+        type: 'POST',
+        url: remove_link,
+        error: function(e, status) {
+          GD.ajaxError(e, status);
+        }
+      });
+    });
+  };
 }());
 
 (function($) {
