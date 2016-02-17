@@ -57,7 +57,7 @@ module GeoDiver
       # Verify paramaters
       def init(params)
         assert_geo_db_present(params)
-        params['geo_db'] = params['geo_db'].upper
+        params['geo_db'] = params['geo_db'].upcase
         params
       end
 
