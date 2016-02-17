@@ -35,7 +35,8 @@ module GeoDiver
         # wait until geo db has been loaded in background thread
         load_geo_db_thread.join unless load_geo_db_thread.nil?
         run_analysis
-        compress_files # TODO move compression to a background Thread
+        # Compress files in the background
+        Thread.new { compress_files(@run_dir, @params['geo_db']) }
         results = generate_results_hash(url)
         save_results_to_file(results)
         results
@@ -172,8 +173,8 @@ module GeoDiver
         ' --dev TRUE'
       end
 
-      def compress_files
-        cmd = "zip -jr '#{@run_dir}/geodiver_results.zip' '#{@run_dir}'"
+      def compress_files(run_dir, geodb)
+        cmd = "zip -jr '#{run_dir}/#{geodb}_geodiver_results.zip' '#{run_dir}'"
         logger.debug("Running CMD: #{cmd}")
         system("#{cmd}")
       end

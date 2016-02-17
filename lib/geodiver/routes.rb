@@ -1,3 +1,4 @@
+require 'base64'
 require 'json'
 require 'omniauth'
 require 'omniauth-google-oauth2'
@@ -42,7 +43,7 @@ module GeoDiver
       # saves session info as a instance variable (as compared to within a
       # cookie) and thus, Rack::Session::Pool should be faster. Moreover, it
       # allows for the storage of complex objects. 
-      use Rack::Session::Pool
+      use Rack::Session::Pool, :expire_after => 2592000 # 30 days
 
       # Provide OmniAuth the Google Key and Secret Key for Authentication
       use OmniAuth::Builder do
@@ -112,23 +113,21 @@ module GeoDiver
     # Run the GeoDiver Analysis
     post '/analyse' do
       redirect to('auth/google_oauth2') if session[:user].nil?
-      email = session[:user].info['email']
+      email    = Base64.decode64(params[:user])
       @results = GeoAnalysis.run(params, email, request.base_url, session[:bgThread])
       slim :results, layout: false
     end
 
     # Generate and return a JSON object for the Gene Expression Results
     post '/gene_expression_graph' do
-      redirect to('auth/google_oauth2') if session[:user].nil?
       content_type :json
-      email    = session[:user].info['email']
+      email = Base64.decode64(params[:user])
       GeoAnalysisHelper.get_expression_json(params, email)
     end
 
     # Generate the Interaction Netwoks
     post '/interaction_image' do
-      redirect to('auth/google_oauth2') if session[:user].nil?
-      email            =  session[:user].info['email']
+      email            =  Base64.decode64(params[:user])
       @interaction_img = GeoAnalysisHelper.create_interactions(params, email)
       slim :interactionNetwork, layout: false
     end
@@ -169,7 +168,7 @@ module GeoDiver
       unless File.exist? File.join(user_public, session[:user].info['email'])
         FileUtils.ln_s(user_dir, user_public)
       end
-      redirect '/analyse' 
+      redirect '/analyse'
     end
 
     get '/logout' do
