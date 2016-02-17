@@ -78,5 +78,6 @@ if(analysis.type == "ExpVsCtrl"){
     
     # Interaction pathways for experimental group 2
     pathview(gene.data = geo.dataset[, Group2names][, 1:2], pathway.id = pathid, 
-             species = keggcode.organism, out.suffix = "gage_pathway")    
+             species = keggcode.organism, out.suffix = "gage_pathway")
+    
 }
