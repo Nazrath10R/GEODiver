@@ -51,6 +51,7 @@ module GeoDiver
           results_url: generate_results_url(url),
           share_url: generate_share_url(url),
           assets_path: generate_relative_link(url),
+          full_path: @run_dir,
           meta_data: parse_meta_json,
           params: @params }
       end
