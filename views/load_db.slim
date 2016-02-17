@@ -1,7 +1,7 @@
 .card-action
   p.col.sm12
     span#geo_db_title.activator.light-blue-text.text-darken-3.heading1 style="cursor:pointer;" 
-      | #{@geo_db_results['Title']} [#{@geo_db_results['Accession']}]
+      | #{@geo_db_results['Title']} [#{@geo_db_results['Accession'].upcase}]
       i.material-icons info
   form#analyse action="/analyse"
     input type="hidden" name="geo_db" value="#{@geo_db_results['Accession'].upcase}"

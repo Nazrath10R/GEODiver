@@ -27,19 +27,20 @@ module GeoDiver
       # download the GEO dataset and extract the meta data and convert into
       # RData
       def run(params)
-        params = init(params)
-        meta_json_file = File.join(db_dir, params['geo_db'],
-                              "#{params['geo_db']}.json")
+        init(params)
+        geo_accession = params['geo_db'].upcase
+        meta_json_file = File.join(db_dir, geo_accession,
+                                   "#{geo_accession}.json")
         if File.exist? meta_json_file
           logger.debug("Found GeoDb at: '#{meta_json_file}'")
-          logger.debug("Parsing GeoDb '#{params['geo_db']}'")
+          logger.debug("Parsing GeoDb '#{geo_accession}'")
           meta_data = parse_meta_data(meta_json_file)
         else
-          logger.debug("Local GeoDb for '#{params['geo_db']}' not found.")
-          meta_data = download_and_parse_meta_data(params['geo_db'])
+          logger.debug("Local GeoDb for '#{geo_accession}' not found.")
+          meta_data = download_and_parse_meta_data(geo_accession)
           write_to_json(meta_data, meta_json_file)
         end
-        soft_link_meta_json_to_public_dir(params['geo_db'], meta_json_file)
+        soft_link_meta_json_to_public_dir(geo_accession, meta_json_file)
         logger.debug("GeoDb loaded into memory")
         meta_data
       end
@@ -57,8 +58,6 @@ module GeoDiver
       # Verify paramaters
       def init(params)
         assert_geo_db_present(params)
-        params['geo_db'] = params['geo_db'].upcase
-        params
       end
 
       #
