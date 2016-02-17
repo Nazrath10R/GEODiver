@@ -10,7 +10,7 @@ html lang="en"
       .nav-wrapper
         span.hide-on-med-and-down.logo
           img height="64" src="#{uri('assets/img/logo.svg')}" alt="GeoDiver Logo"
-        a#logo-container.brand-logo.white-text href="#{uri('..')}"
+        a#logo-container.brand-logo.white-text href="#{request.base_url}"
           | &nbsp;GeoDiver
         ul.hide-on-med-and-down.navbar_centered
           - if uri =~ %r{/analyse}
@@ -43,58 +43,72 @@ html lang="en"
           li
             a href="/my_results"  My Results
           li
-            a href="/auth/google_oauth2"  Login
+            a href="/logout"  Logout
     == yield
     #loading_modal.modal
       .modal-content
-        h4#model_header_text
-        p#model_text
+        h4#modal_header_text
+        p#modal_text
         .progress
           .indeterminate.light-blue.accent-2
     /! Dropdown Structure
     ul#dropdown.dropdown-content.collection style="z-index:5;"
-      li.collection-item.avatar
+      li.collection-item.avatar onclick="location.href='#{request.base_url}/faq';"
         i.material-icons.circle.light-blue.accent-3  live_help
         span.title FAQs
       li.collection-item.avatar
         i.material-icons.circle.light-blue.accent-3  feedback
         span.title Feedback
-      li.collection-item.avatar onclick="location.href='/logout';" style="cursor: pointer;"
+      li.collection-item.avatar onclick="location.href='#{request.base_url}/logout';" style="cursor: pointer;"
         i.material-icons.circle.light-blue.accent-3  power_settings_new
         span.title Log Out
 
-    #share_model.modal
+    #share_modal.modal
       .modal-content
         h4 Share Your Results
-        p Your Results are accessible using the following link
+        p Your results are accessible using the following link
         .row 
           .input-field.col.s12
             input#share_link_input.share_link_input type="text" placeholder="Share Link" /
             label for="share_link_input"  Share Link
       .modal-footer
-        a.remove_link.modal-action.modal-close.waves-effect.waves-red.btn-flat.left  Remove Sharing Link
+        a.remove_link.waves-effect.waves-red.btn-flat.left  Remove Sharing Link
         a.modal-action.modal-close.waves-effect.waves-green.btn-flat href="#!"  Done
 
-    #share_the_link_model.modal
+    #share_the_link_modal.modal
       .modal-content
-        h4 Your Results are Accessible using the following link
+        h4 Your results are accessible using the following link
         .row 
           .input-field.col.s12
             input#share_link_input1.share_link_input type="text" placeholder="Share Link" /
             label for="share_link_input1"  Share Link
       .modal-footer
-        a.remove_link.modal-action.modal-close.waves-effect.waves-red.btn-flat.left  Remove Sharing Link
+        a.remove_link.waves-effect.waves-red.btn-flat.left  Remove Sharing Link
         a.modal-action.modal-close.waves-effect.waves-green.btn-flat href="#!"  Done
+
+    #delete_modal.modal
+      .modal-content
+        h4 Delete Results
+        p Are you sure you want to delete this Result? 
+      .modal-footer
+        a.modal-action.modal-close.waves-effect.waves-green.btn-flat.left href="#!"   Cancel
+        a.delete-results.waves-effect.waves-red.btn-flat   Delete
+
+
+
     script src="https://code.jquery.com/jquery-2.1.1.min.js" 
     script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.5/js/materialize.min.js"
     script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.14.0/jquery.validate.min.js"
     script src="https://cdn.plot.ly/plotly-latest.min.js" 
     script src="//cdn.datatables.net/1.10.10/js/jquery.dataTables.js"
     script src="#{uri('assets/js/geodiver_c.min.js')}"
-    - if request.path_info =~ %r{^/result/} || request.path_info =~ %r{^/sh/}
+    - if request.path_info =~ %r{^/result/} || request.path_info =~ %r{^/sh/} || request.path_info =~ %r{^/my_results}
       javascript:
         $( document ).ready(function() {
             GD.createPlots();
+            $('.modal-trigger').leanModal();
+            GD.download_all_results();
+            GD.delete_result();
+            GD.share_result();
+            GD.remove_share();
         });
-    - if request.path_info =~ %r{^/my_result}
-      script src="#{uri('assets/js/my_results.min.js')}"

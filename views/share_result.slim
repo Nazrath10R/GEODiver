@@ -1,0 +1,239 @@
+doctype html
+html lang="en" 
+  head
+    meta content=("text/html; charset=UTF-8") http-equiv="Content-Type"
+    meta content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no" name="viewport"
+    title GeoDiver
+    link type="text/css" rel="stylesheet"  href="#{uri('assets/css/style.min.css')}" 
+  body.app
+    nav.blue.darken-4
+      .nav-wrapper
+        span.hide-on-med-and-down.logo
+          img height="64" src="#{uri('assets/img/logo.svg')}" alt="GeoDiver Logo"
+        a#logo-container.brand-logo.white-text href="#{request.base_url}"
+          | &nbsp;GeoDiver
+        ul.hide-on-med-and-down.navbar_centered
+          li
+            a.white-text href="/auth/google_oauth2"  Analyse               
+          li
+            a.white-text href="/auth/google_oauth2"  My Results 
+        ul.right.hide-on-med-and-down
+          li
+            a.white-text href="/auth/google_oauth2" 
+              i.material-icons.right> perm_identity
+              | Login
+        a.button-collapse data-activates="nav-mobile" href="#" 
+          i.material-icons menu
+        ul#nav-mobile.side-nav
+          li
+            a href="/auth/google_oauth2"  Login
+    .container
+      #results_section.section
+        .card.results_card data-user="#{@results['user']}" data-geodb="#{@results['geo_db']}" data-result="#{@results['uniq_result_id']}" data-share-link="#{@results['share_url']}" data-results-link="#{@results['results_url']}"
+          .card-content style="padding: 1.5rem 3.5rem;"
+            span#results.card-title.light-blue-text.text-darken-3 style=("font-size: 2rem; padding: 2rem 0; font-weight: 400;")
+              | GeoDiver Results: #{@results['geo_db']}
+            .actions.right style=" display: -webkit-flex; margin-left: auto; padding: 10px 0;"
+              a#download-all-results.waves-effect.btn-flat.nopadding.light-blue-text.text-darken-3 data-download="#{@results['assets_path']}/#{@results['geo_db']}_geodiver_results.zip" style="min-width:36px;padding:0 8px;margin-right:0px"
+                i.material-icons  file_download
+          .card-action
+            span#overview.card-title.light-blue-text.text-darken-3 style=("padding-left:0;") data-overview-json="#{@results['assets_path']}/data.json"
+              |  Overview (PCA, HCA, Boxplots)
+            p.section
+              span.light-blue-text.text-darken-3.heading2 Overview Boxplots 
+              img.materialboxed src="#{@results['assets_path']}/boxplot.png" width="100%"
+            p.section
+              span.light-blue-text.text-darken-3.heading2 Principal Component Analysis
+            #PCA_plot style=("height: 500px;")
+              /! Plotly chart will be drawn inside this DIV
+            p.section
+              span.light-blue-text.text-darken-3.heading2 Principle Component Exploratory Analysis
+              .row
+                .col.s12
+                  ul#pca_tabs.tabs
+                    li.tab.col.s6
+                      a.light-blue-text.text-darken-3 href="#pca2d"  2 Dimensions
+                    li.tab.col.s6
+                      a.light-blue-text.text-darken-3 href="#pca3d"  3 Dimensions
+                    .indicator.blue style="z-index:1"
+                #pca2d.col.s12 style="padding-top:1.5rem;"
+                  form#pca2d_redraw
+                    .row
+                      .input-field.col.s12.m5
+                        select#PC2doption1 name='PC2doption1'
+                          option disabled="" selected="" value=""  Choose your option
+                        label First PCA to analyse
+                      .input-field.col.s12.m5
+                        select#PC2doption2 name='PC2doption2'
+                          option disabled="" selected="" value=""  Choose your option
+                        label Second PCA to analyse
+                      .col.s12.m2
+                        button#redraw_pca.btn.waves-effect.waves-light.light-blue.accent-4.btn-large type="submit" value="redraw"
+                          | Redraw Plot
+                  .clearfix
+                  p.select_pc2_validations.red-text style="font-size: .8rem; padding-left:1rem;"
+                  #pca2d_plot style=("height: 70vh;")
+                #pca3d.col.s12 style="padding-top:1.5rem;"
+                  form#pca3d_redraw
+                    .row
+                      .input-field.col.s12.m3
+                        select#PC3doption1 name='PC3doption1'
+                          option disabled="" selected="" value=""  Choose your option
+                        label First PCA to analyse
+                      .input-field.col.s12.m3
+                        select#PC3doption2 name='PC3doption2'
+                          option disabled="" selected="" value=""  Choose your option
+                        label Second PCA to analyse
+                      .input-field.col.s12.m3
+                        select#PC3doption3 name='PC3doption3'
+                          option disabled="" selected="" value=""  Choose your option
+                        label Third PCA to analyse
+                      .col.s12.m2.offset-m1
+                        button#redraw_pca.btn.waves-effect.waves-light.light-blue.accent-4.btn-large type="submit" value="redraw"
+                          | Redraw Plot
+                  .clearfix
+                  p.select_pc3_validations.red-text style="font-size: .8rem; padding-left:1rem;"
+                  #pca3d_plot style=("height: 70vh;")
+          .card-action
+            span.card-title.light-blue-text.text-darken-3 style=("padding-left:0;")  Results
+            .row
+              .col.s12
+                ul#results_tabs.tabs
+                  li.tab.col.s6
+                    a#DGEA_tab.light-blue-text.text-darken-3.heading2 href="#DGEA"  Differential Gene Expression Analysis
+                  li.tab.col.s6
+                    a.light-blue-text.text-darken-3.heading2 href="#GSEA"  Gene Set Enrichment Analysis
+                  .indicator.blue style="z-index:1"
+              #DGEA.col.s12 data-dgea-json="#{@results['assets_path']}/dgea_data.json"
+                p.section
+                  span.light-blue-text.text-darken-3.heading2 Heatmap
+                  br
+                .materialboxed_center
+                  img.materialboxed src="#{@results['assets_path']}/dgea_heatmap.svg" width="100%"
+                .row
+                  #admin.col.s12
+                    #dgea-top-table-wrapper.material-table
+                      .table-header
+                        span.table-title.light-blue-text.text-darken-3.heading2  Differential Genes - Top Table
+                        .actions
+                          a#download-top-table.waves-effect.btn-flat.nopadding href="#{@results['assets_path']}/dgea_toptable.tsv"
+                            i.material-icons  file_download
+                          a.search-toggle.waves-effect.btn-flat.nopadding
+                            i.material-icons  search
+                      table#dgea-top-table
+                        thead
+                          tr
+                            th ID
+                            th logFC
+                            th AveExpr
+                            th t Value 
+                            th P Value
+                            th Adjusted P Value
+                            th B
+                            th
+                p.section
+                  span.light-blue-text.text-darken-3.heading2 Volcano Plot
+                  br
+                .materialboxed_center
+                  img.materialboxed src="#{@results['assets_path']}/dgea_volcano.png" width="100%"
+                p.section
+                  span.light-blue-text.text-darken-3.heading2 Volcano Plots
+                  br
+                #volcano_plot style=("width: 100%; height: 600px;") 
+                  /! Plotly chart will be drawn inside this DIV
+              #GSEA.col.s12 data-gsea-json="#{@results['assets_path']}/gage_data.json"
+                p.section
+                  span.light-blue-text.text-darken-3.heading2 Heatmap
+                  br
+                .materialboxed_center
+                  img.materialboxed src="#{@results['assets_path']}/gage_heatmap.svg" width="100%"
+                .row
+                  #admin.col.s12
+                    #gsea-top-table-wrapper.material-table
+                      .table-header
+                        span.table-title.light-blue-text.text-darken-3.heading2  Generally Applicable Gene Set Enrichment Analysis - Top Table
+                        .actions
+                          a#download-top-table.waves-effect.btn-flat.nopadding href="#{@results['assets_path']}/gage_toptable.tsv"
+                            i.material-icons  file_download
+                          a.search-toggle.waves-effect.btn-flat.nopadding
+                            i.material-icons  search
+                      table#gsea-top-table
+                        thead
+                          tr
+                            th Pathway ID
+                            th Pathway
+                            th P Geomean
+                            th Stat Mean
+                            th P Value
+                            th Q Value
+                            th Set Size
+                            th
+
+
+
+    #loading_modal.modal
+      .modal-content
+        h4#modal_header_text
+        p#modal_text
+        .progress
+          .indeterminate.light-blue.accent-2
+    /! Dropdown Structure
+    ul#dropdown.dropdown-content.collection style="z-index:5;"
+      li.collection-item.avatar onclick="location.href='#{request.base_url}/faq';"
+        i.material-icons.circle.light-blue.accent-3  live_help
+        span.title FAQs
+      li.collection-item.avatar
+        i.material-icons.circle.light-blue.accent-3  feedback
+        span.title Feedback
+      li.collection-item.avatar onclick="location.href='#{request.base_url}/logout';" style="cursor: pointer;"
+        i.material-icons.circle.light-blue.accent-3  power_settings_new
+        span.title Log Out
+
+    #share_modal.modal
+      .modal-content
+        h4 Share Your Results
+        p Your Results are accessible using the following link
+        .row 
+          .input-field.col.s12
+            input#share_link_input.share_link_input type="text" placeholder="Share Link" /
+            label for="share_link_input"  Share Link
+      .modal-footer
+        a.remove_link.waves-effect.waves-red.btn-flat.left  Remove Sharing Link
+        a.modal-action.modal-close.waves-effect.waves-green.btn-flat href="#!"  Done
+
+    #share_the_link_modal.modal
+      .modal-content
+        h4 Your Results are Accessible using the following link
+        .row 
+          .input-field.col.s12
+            input#share_link_input1.share_link_input type="text" placeholder="Share Link" /
+            label for="share_link_input1"  Share Link
+      .modal-footer
+        a.remove_link.waves-effect.waves-red.btn-flat.left  Remove Sharing Link
+        a.modal-action.modal-close.waves-effect.waves-green.btn-flat href="#!"  Done
+
+    #delete_modal.modal
+      .modal-content
+        h4 Delete Results
+        p Are you sure you want to delete this Result? 
+      .modal-footer
+        a.modal-action.modal-close.waves-effect.waves-green.btn-flat.left href="#!"   Cancel
+        a.delete-results.waves-effect.waves-red.btn-flat   Delete
+
+
+    script src="https://code.jquery.com/jquery-2.1.1.min.js" 
+    script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.5/js/materialize.min.js"
+    script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.14.0/jquery.validate.min.js"
+    script src="https://cdn.plot.ly/plotly-latest.min.js" 
+    script src="//cdn.datatables.net/1.10.10/js/jquery.dataTables.js"
+    script src="#{uri('assets/js/geodiver_c.min.js')}"
+    - if request.path_info =~ %r{^/result/} || request.path_info =~ %r{^/sh/}
+      javascript:
+        $( document ).ready(function() {
+            GD.createPlots();
+            $('.modal-trigger').leanModal();
+            GD.download_all_results();
+            GD.delete_result();
+            GD.share_result();
+            GD.remove_share();
+        });

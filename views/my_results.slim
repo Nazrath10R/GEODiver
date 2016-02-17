@@ -1,4 +1,4 @@
-#history_container.container style="padding-top:2rem;"
+#results_section.container style="padding-top:2rem;"
   .row
     - if @my_results.nil?
     - else 
@@ -13,7 +13,7 @@
                 | Run Time: #{result['run_time'].strftime("%H:%M %d/%m/%Y")}
             .card-action style="padding:0;"
               .actions.right style=" display: -webkit-flex; margin-left: auto; padding: 10px 0;"
-                a#download-all-results.waves-effect.btn-flat.nopadding.light-blue-text.text-darken-3 data-download="#{result['assets_path']}/geodiver_results.zip" style="min-width:36px;padding:0 8px;margin-right:0px"
+                a#download-all-results.waves-effect.btn-flat.nopadding.light-blue-text.text-darken-3 data-download="#{result['assets_path']}/#{result['geo_db']}_geodiver_results.zip" style="min-width:36px;padding:0 8px;margin-right:0px"
                   i.material-icons  file_download
                 a#delete_results.waves-effect.btn-flat.nopadding.light-blue-text.text-darken-3 style="min-width:36px;padding:0 8px;margin-right:0px" 
                   i.material-icons  delete
