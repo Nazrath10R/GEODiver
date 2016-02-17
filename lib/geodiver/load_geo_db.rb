@@ -27,7 +27,7 @@ module GeoDiver
       # download the GEO dataset and extract the meta data and convert into
       # RData
       def run(params)
-        init(params)
+        params = init(params)
         meta_json_file = File.join(db_dir, params['geo_db'],
                               "#{params['geo_db']}.json")
         if File.exist? meta_json_file
@@ -57,6 +57,8 @@ module GeoDiver
       # Verify paramaters
       def init(params)
         assert_geo_db_present(params)
+        params['geo_db'] = params['geo_db'].upper
+        params
       end
 
       #

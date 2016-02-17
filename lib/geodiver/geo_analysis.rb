@@ -67,6 +67,7 @@ module GeoDiver
       #
       def assert_params
         assert_geo_db_present
+        @params['geo_db'] = @params['geo_db'].upper
         # TODO assert other Params
       end
 
