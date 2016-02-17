@@ -46,10 +46,11 @@ module GeoDiver
       end
 
       def convert_geodb_into_RData(geo_accession)
+        geo_accession = geo_accession.upcase
         return if File.exist?(File.join(db_dir, geo_accession,
                                         "#{geo_accession}.RData"))
-        logger.debug("Running: #{load_geo_db_cmd}")
-        Thread.new { system(load_geo_db_cmd) }
+        logger.debug("Running: #{load_geo_db_cmd(geo_accession)}")
+        Thread.new { system(load_geo_db_cmd(geo_accession)) }
         # TODO check exit status of the system call
       end
 
