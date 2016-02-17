@@ -227,13 +227,12 @@ html lang="en"
     script src="https://cdn.plot.ly/plotly-latest.min.js" 
     script src="//cdn.datatables.net/1.10.10/js/jquery.dataTables.js"
     script src="#{uri('assets/js/geodiver_c.min.js')}"
-    - if request.path_info =~ %r{^/result/} || request.path_info =~ %r{^/sh/}
-      javascript:
-        $( document ).ready(function() {
-            GD.createPlots();
-            $('.modal-trigger').leanModal();
-            GD.download_all_results();
-            GD.delete_result();
-            GD.share_result();
-            GD.remove_share();
-        });
+    javascript:
+      $( document ).ready(function() {
+          GD.createPlots();
+          $('.modal-trigger').leanModal();
+          GD.download_all_results();
+          GD.delete_result();
+          GD.share_result();
+          GD.remove_share();
+      });
