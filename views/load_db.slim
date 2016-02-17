@@ -1,10 +1,11 @@
 .card-action
   p.col.sm12
-    span#geo_db_title.light-blue-text.text-darken-3.heading1
+    span#geo_db_title.activator.light-blue-text.text-darken-3.heading1 style="cursor:pointer;" 
       | #{@geo_db_results['Title']} [#{@geo_db_results['Accession']}]
-      i.activator.material-icons  info
+      i.material-icons info
   form#analyse action="/analyse"
-    input type="hidden" name="geo_db" value="#{@geo_db_results['Accession']}"
+    input type="hidden" name="geo_db" value="#{@geo_db_results['Accession'].upcase}"
+    input type="hidden" name="user" value="#{Base64.encode64(session[:user].info['email']).chomp}"
     .input-field.col.s12
       span.light-blue-text.text-darken-3.heading2 Select Factor to Analyse
       - @geo_db_results['Factors'].keys.each do |factor|
@@ -20,18 +21,19 @@
         .select_factors id="#{factor.gsub(/[\/\\\.\:\#\s]/, '_')}_select" style="display:none;"
           .input-field.col.s12.m6
             select multiple="" name="groupa[]" 
-              option disabled="" selected="" value=""  Choose your option (Group A)
+              option disabled="" selected="" value=""  Choose your option(s) (Group A)
               - phenotypes.each do |p|
                 option value="#{p}"
                   | #{p.split(/[\s]/).map(&:capitalize).join(' ')}
             label  Group A
           .input-field.col.s12.m6
             select multiple="" name="groupb[]"
-              option disabled="" selected="" value=""  Choose your option  (Group B)
+              option disabled="" selected="" value=""  Choose your option(s)  (Group B)
               - phenotypes.each do |p|
                 option  value="#{p}"
                   | #{p.split(/[\s]/).map(&:capitalize).join(' ')}
             label Group B
+      p.select_factors_validations.red-text style="font-size: .8rem; padding-left:1rem;"
     .clearfix
     ul.collapsible.adv_param_collapsible data-collapsible="accordion" 
       li

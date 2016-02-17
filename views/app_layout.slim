@@ -29,7 +29,7 @@ html lang="en"
             li
               a.white-text href="/my_results"  My Results 
         ul.right.hide-on-med-and-down
-          li
+          li.user data-user="#{Base64.encode64(session[:user].info['email']).chomp}"
             a.white-text.dropdown-button href="#!" data-activates="dropdown" data-beloworigin="true"
               span.left style="padding-right:15px; max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
                 | #{session[:user].info['first_name']}
