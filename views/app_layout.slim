@@ -29,12 +29,19 @@ html lang="en"
             li
               a.white-text href="/my_results"  My Results 
         ul.right.hide-on-med-and-down
-          li.user data-user="#{Base64.encode64(session[:user].info['email']).chomp}"
-            a.white-text.dropdown-button href="#!" data-activates="dropdown" data-beloworigin="true"
-              span.left style="padding-right:15px; max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
-                | #{session[:user].info['first_name']}
-              img.circle.profile_img.right alt="Profile Picture" src="#{session[:user].info['image']}"/
-              .clearfix
+          - if ! session[:user].nil?
+            li.user data-user="#{Base64.encode64(session[:user].info['email']).chomp}"
+              a.white-text.dropdown-button href="#!" data-activates="dropdown" data-beloworigin="true"
+                span.left style="padding-right:15px; max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
+                  | #{session[:user].info['first_name']}
+                img.circle.profile_img.right alt="Profile Picture" src="#{session[:user].info['image']}"/
+                .clearfix
+          - else      
+            li
+              a.white-text href="/auth/google_oauth2" 
+                i.material-icons.right> perm_identity
+                | Login
+
         a.button-collapse data-activates="nav-mobile" href="#" 
           i.material-icons.white-text menu
         ul#nav-mobile.side-nav
