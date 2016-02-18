@@ -1,7 +1,7 @@
 # GeoDiver
 
 [![Build Status](https://travis-ci.org/SBCS-Bioinformatics/GEODiver.svg?branch=master)](https://travis-ci.org/SBCS-Bioinformatics/GEODiver)
-
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/SBCS-Bioinformatics/GEODiver/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/SBCS-Bioinformatics/GEODiver/?branch=master)
 
 
 
