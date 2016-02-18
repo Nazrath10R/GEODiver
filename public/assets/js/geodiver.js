@@ -92,7 +92,7 @@ if (!GD) {
       rules: {},
       submitHandler: function(form) {
         // Manually check if groupa / groupb is empty
-        if ( $.isEmptyObject( $('select[name="groupa[]"]').val() )  || $.isEmptyObject( $('select[name="groupb[]"]').val() )  ) {
+        if ( $.isEmptyObject( $('select[name="groupa[]"]:enabled').val() )  || $.isEmptyObject( $('select[name="groupb[]"]:enabled').val() )  ) {
           $('.select_factors_validations').text('Please select the factors in the two groups to analyse.');
           return false;
         }
@@ -114,6 +114,7 @@ if (!GD) {
             GD.createPlots();
             $('.materialboxed').materialbox(); // init materialbox
             $('.modal-trigger').leanModal();
+            $('.select_factors input.select-dropdown').removeAttr('disabled');
             GD.download_all_results();
             GD.delete_result();
             GD.share_result();
@@ -444,7 +445,9 @@ if (!GD) {
       var target = '#' + $(this).attr('id') + '_select';
       if ('#' + $('.select_factors:visible').attr('id') !== target) {
         $('.select_factors').hide();
+        $('.select_factors select').attr("disabled", "disabled");
         $(target).show();
+        $(target + ' select').removeAttr("disabled");
       }
     });
   };
