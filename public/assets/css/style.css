@@ -575,3 +575,7 @@ opacity: 0.8;
   color: #fff; 
   text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
 }
+
+.modebar-btn {
+  margin-right:0;
+}
