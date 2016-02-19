@@ -55,7 +55,7 @@ if (!GD) {
       submitHandler: function(form) {
         $('.card-action').remove();
         $('#results_section').empty();
-        var geo_db = $('input[name=geo_db]').val();
+        var geo_db = $('input[name=geo_db]').val().toUpperCase();
         $('#modal_header_text').text('Loading GEO Dataset: ' + geo_db);
         $('#modal_text').text('This should take a few seconds. Please leave this page open');
         $('#loading_modal').openModal({ dismissible: false });
@@ -98,7 +98,7 @@ if (!GD) {
         }
         $('.select_factors_validations').text('');
         $('#results_section').empty();
-        var geo_db = $('input[name=geo_db]').val();
+        var geo_db = $('input[name=geo_db]').val().toUpperCase();
         $('#modal_header_text').text('Analysing GEO Dataset: ' + geo_db);
         $('#modal_text').text('This should take a few minutes. Please leave this page open');
         $('#loading_modal').openModal({ dismissible: false});
@@ -266,12 +266,12 @@ if (!GD) {
     $.getJSON(gseaJsonFile, function(json) {
       GD.initializeToptable(json.tops, 'gsea-top-table', 'gsea-top-table-wrapper');
     });
-    window.onresize = function() {
+    window.addEventListener('resize', function() {
       Plotly.Plots.resize(pcaPlot);
       Plotly.Plots.resize(volcanoPlot);
       Plotly.Plots.resize(pca2dScatterPlot);
       Plotly.Plots.resize(pca3dScatterPlot);
-    };
+    });
   };
 
   GD.create2dPCAScatterPlot = function(pcdata, x, y) {
@@ -295,7 +295,7 @@ if (!GD) {
     group1 = { x: pcdata[ x + '.Group1'], y: pcdata[y + '.Group1'], z: pcdata[ z + '.Group1'], text: pcdata.Group1, type: 'scatter3d', mode: 'markers', name: 'Group1', marker: { symbol: 'circle' } };
     group2 = { x: pcdata[ x + '.Group2'], y: pcdata[y + '.Group2'], z: pcdata[ z + '.Group2'], text: pcdata.Group2, type: 'scatter3d', mode: 'markers', name: 'Group2', marker: { symbol: 'square' } };
     data = [group1, group2];
-    layout = { xaxis: { title: x }, yaxis: { title: y }, zaxis: {title: z} };
+    layout = { scene: {xaxis: { title: x }, yaxis: { title: y }, zaxis: {title: z} } };
 
     parentWidth = 100;
     PCAplotGd3 = Plotly.d3.select('#pca3d_plot')
@@ -346,9 +346,9 @@ if (!GD) {
                               'margin-left': (100 - parentWidth) / 2 + '%'});
     var expressionPlot = expressionPlotGd3.node();
     Plotly.newPlot(expressionPlot, data, layout);
-    window.onresize = function() {
+    window.addEventListener('resize', function() {
       Plotly.Plots.resize(expressionPlot);
-    };
+    });
   };
 
 
@@ -479,7 +479,7 @@ if (!GD) {
   };
 
   GD.addDataSetInfo = function() {
-    var geoAccession = $('input[name=geo_db]').val();
+    var geoAccession = $('input[name=geo_db]').val().toUpperCase();
     var jsonFile = 'GeoDiver/DBs/' + geoAccession + '.json';
     $.getJSON(jsonFile, function(json) {
       $('#dataset_accession').text(json.Accession);
