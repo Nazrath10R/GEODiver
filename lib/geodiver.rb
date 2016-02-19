@@ -94,8 +94,10 @@ module GeoDiver
     # started.
     def init_public_dir
       config[:gd_public_dir] = File.expand_path config[:gd_public_dir]
+      logger.debug "GeoDiver Directory: #{config[:gd_public_dir]}"
       @run_unique_id = 'GD_' + Time.now.strftime('%Y%m%d-%H-%M-%S').to_s
       @public_dir = File.join(config[:gd_public_dir], @run_unique_id, 'public')
+      logger.debug "Public Directory: #{@public_dir}"
       FileUtils.mkdir_p @public_dir
     end
 
