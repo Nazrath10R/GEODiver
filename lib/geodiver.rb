@@ -33,7 +33,6 @@ module GeoDiver
 
       init_dirs
       check_num_threads
-      init_geo_dbs
 
       self
 
@@ -82,40 +81,31 @@ module GeoDiver
 
     private
 
+    # Set up the directory structure in @config[:gd_public_dir]
     def init_dirs
-      init_public_dir
-      FileUtils.cp_r(File.join(GeoDiver.root, 'public/assets'), @public_dir)
-      FileUtils.cp_r(File.join(GeoDiver.root, 'public/GeoDiver'), @public_dir)
-      init_users_and_db_dir
-    end
-
-    # simply create the public directory in @config[:gd_public_dir]
-    # run_unique_id is a unique id generated each time geodiver web app is
-    # started.
-    def init_public_dir
       config[:gd_public_dir] = File.expand_path config[:gd_public_dir]
       logger.debug "GeoDiver Directory: #{config[:gd_public_dir]}"
-      @run_unique_id = 'GD_' + Time.now.strftime('%Y%m%d-%H-%M-%S').to_s
-      @public_dir = File.join(config[:gd_public_dir], @run_unique_id, 'public')
-      logger.debug "Public Directory: #{@public_dir}"
-      FileUtils.mkdir_p @public_dir
+      @public_dir = create_public_dir
+      @users_dir  = File.expand_path('../Users', @public_dir)
+      FileUtils.mkdir_p @users_dir unless Dir.exist? @users_dir
+      @db_dir     = File.expand_path('../DBs', @public_dir)
+      FileUtils.mkdir_p @db_dir unless Dir.exist? @db_dir
     end
 
-    def init_users_and_db_dir
-      @users_dir = File.expand_path('../Users', @public_dir)
-      @db_dir = File.expand_path('../DBs', @public_dir)
-      FileUtils.mkdir_p @users_dir
-      FileUtils.mkdir_p @db_dir
-    end
-
-    def init_geo_dbs
-      return unless config[:geo_db_dir]
-      config[:geo_db_dir] = File.expand_path(config[:geo_db_dir])
-      Dir.foreach(config[:geo_db_dir]) do |accession|
-        next unless accession =~ /^GDS/
-        full_path = File.join(config[:geo_db_dir], accession)
-        FileUtils.ln_s(full_path, @db_dir)
+    # Create the public dir, if already created and in development environment,
+    # remove the existing assets and copy over the new assets
+    def create_public_dir
+      public_dir = File.join(config[:gd_public_dir], 'public')
+      if Dir.exist?(public_dir) && verbose?
+        FileUtils.rm_r File.join(public_dir, 'assets')
+        FileUtils.cp_r(File.join(GeoDiver.root, 'public/assets'), public_dir)
+      else
+        FileUtils.mkdir_p public_dir
+        FileUtils.cp_r(File.join(GeoDiver.root, 'public/GeoDiver'), public_dir)
+        FileUtils.cp_r(File.join(GeoDiver.root, 'public/assets'), public_dir)
       end
+      logger.debug "Public Directory: #{public_dir}"
+      public_dir
     end
 
     def check_num_threads
