@@ -1,4 +1,4 @@
-require "base64"
+require 'base64'
 require 'forwardable'
 require 'json'
 
@@ -35,7 +35,7 @@ module GeoDiver
         # wait until geo db has been loaded in background thread
         load_geo_db_thread.join unless load_geo_db_thread.nil?
         run_analysis
-        # Compress files in the background
+        # Compress files in the background
         Thread.new { compress_files(@run_dir, @params['geo_db']) }
         results = generate_results_hash(url)
         save_results_to_file(results)
@@ -69,7 +69,7 @@ module GeoDiver
       def assert_params
         assert_geo_db_present
         @params['geo_db'] = @params['geo_db'].upcase
-        # TODO assert other Params
+        # TODO: assert other Params
       end
 
       #
@@ -185,7 +185,7 @@ module GeoDiver
         analyses = []
         analyses << 'Toptable' if @params['dgea_toptable'] == 'on'
         if @params['dgea_heatmap'] == 'on' || @params['gsea_heatmap'] == 'on'
-          analyses << 'Heatmap' 
+          analyses << 'Heatmap'
         end
         analyses << 'Volcano' if @params['dgea_volcano'] == 'on'
         analyses

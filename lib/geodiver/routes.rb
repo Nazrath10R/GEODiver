@@ -15,7 +15,6 @@ require 'geodiver/version'
 module GeoDiver
   # Sinatra Routes - i.e. The Controller
   class Routes < Sinatra::Base
-    
     # See http://www.sinatrarb.com/configuration.html
     configure do
       # We don't need Rack::MethodOverride. Let's avoid the overhead.
@@ -36,22 +35,15 @@ module GeoDiver
 
       # We don't want Sinatra do setup any loggers for us. We will use our own.
       set :logging, nil
-    end
 
-    configure do
-      # Uer Rack::Session::Pool over Sinatra default sessions. The Session Pool
-      # saves session info as a instance variable (as compared to within a
-      # cookie) and thus, Rack::Session::Pool should be faster. Moreover, it
-      # allows for the storage of complex objects. 
-      use Rack::Session::Pool, :expire_after => 2592000 # 30 days
+      # Use Rack::Session::Pool over Sinatra default sessions.
+      use Rack::Session::Pool, expire_after: 2_592_000 # 30 days
 
       # Provide OmniAuth the Google Key and Secret Key for Authentication
       use OmniAuth::Builder do
         provider :google_oauth2, ENV['GOOGLE_KEY'], ENV['GOOGLE_SECRET'], {}
       end
-    end
 
-    configure do
       # view directory will be found here.
       set :root, -> { GeoDiver.root }
 
@@ -88,7 +80,7 @@ module GeoDiver
       email     = Base64.decode64(params[:encoded_email])
       json_file = File.join(GeoDiver.public_dir, 'GeoDiver/Users/', email,
                             params['geo_db'], params['time'], 'params.json')
-      @results  = JSON.parse( IO.read( json_file) )
+      @results  = JSON.parse(IO.read(json_file))
       slim :single_results, layout: :app_layout
     end
 
@@ -97,11 +89,11 @@ module GeoDiver
       email     = Base64.decode64(params[:encoded_email])
       json_file = File.join(GeoDiver.public_dir, 'GeoDiver/Share/', email,
                             params['geo_db'], params['time'], 'params.json')
-      @results  = JSON.parse( IO.read( json_file) )
+      @results  = JSON.parse(IO.read(json_file))
       slim :share_result, layout: false
     end
 
-    get '/faq' do 
+    get '/faq' do
       if session[:user].nil?
         slim :not_logged_in_faq
       else
@@ -113,8 +105,8 @@ module GeoDiver
     post '/load_geo_db' do
       redirect to('auth/google_oauth2') if session[:user].nil?
       @geo_db_results = LoadGeoData.run(params)
-      # Convert the GeoDb into RData in the background if necessary 
-      session[:bgThread] = LoadGeoData.convert_geodb_into_RData(params['geo_db'])
+      # Convert the GeoDb into RData in the background if necessary
+      session[:geodb] = LoadGeoData.convert_geodb_into_RData(params['geo_db'])
       slim :load_db, layout: false
     end
 
@@ -122,7 +114,8 @@ module GeoDiver
     post '/analyse' do
       redirect to('auth/google_oauth2') if session[:user].nil?
       email    = Base64.decode64(params[:user])
-      @results = GeoAnalysis.run(params, email, request.base_url, session[:bgThread])
+      @results = GeoAnalysis.run(params, email, request.base_url,
+                                 session[:geodb])
       slim :results, layout: false
     end
 
@@ -142,15 +135,15 @@ module GeoDiver
 
     # Create a share link for a result page
     post '/sh/:encoded_email/:geo_db/:time' do
-      email = Base64.decode64(params[:encoded_email])
+      email     = Base64.decode64(params[:encoded_email])
       analysis  = File.join(GeoDiver.users_dir, email, params['geo_db'],
-                               params['time'])
-      share = File.join(GeoDiver.public_dir, 'GeoDiver/Share', email,
-                        params['geo_db'])
+                            params['time'])
+      share     = File.join(GeoDiver.public_dir, 'GeoDiver/Share', email,
+                            params['geo_db'])
       FileUtils.mkdir_p(share) unless File.exist? share
       FileUtils.cp_r(analysis, share)
       share_file = File.join(analysis, '.share')
-      FileUtils.touch(share_file) unless File.exist? share_file 
+      FileUtils.touch(share_file) unless File.exist? share_file
     end
 
     # Remove a share link of a result page
@@ -160,12 +153,12 @@ module GeoDiver
                         params['geo_db'], params['time'])
       FileUtils.rm_r(share) if File.exist? share
       share_file  = File.join(GeoDiver.users_dir, email, params['geo_db'],
-                               params['time'], '.share')
+                              params['time'], '.share')
       FileUtils.rm(share_file) if File.exist? share_file
     end
 
-    # Delete a Results Page
-    post '/delete_result' do 
+    # Delete a Results Page
+    post '/delete_result' do
       redirect to('auth/google_oauth2') if session[:user].nil?
       @results_url = File.join(GeoDiver.users_dir, session[:user].info['email'],
                                params['geo_db'], params['result_id'])
@@ -185,7 +178,7 @@ module GeoDiver
     end
 
     get '/logout' do
-      user_public_dir = File.join(GeoDiver.public_dir, 'GeoDiver/Users', 
+      user_public_dir = File.join(GeoDiver.public_dir, 'GeoDiver/Users',
                                   session[:user].info['email'])
       FileUtils.rm(user_public_dir)
       session[:user] = nil

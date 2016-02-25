@@ -93,7 +93,7 @@ module GeoDiver
     end
 
     # Create the public dir, if already created and in development environment,
-    # remove the existing assets and copy over the new assets
+    # remove the existing assets and copy over the new assets
     def create_public_dir
       public_dir = File.join(config[:gd_public_dir], 'public')
       if Dir.exist?(public_dir) && verbose?
@@ -115,7 +115,7 @@ module GeoDiver
       logger.debug "Will use #{config[:num_threads]} threads to run GeoDiver."
       if config[:num_threads] > 256
         logger.warn "Number of threads set at #{config[:num_threads]} is" \
-                    " unusually high."
+                    ' unusually high.'
       end
     rescue
       raise NUM_THREADS_INCORRECT

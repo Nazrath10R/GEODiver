@@ -71,11 +71,11 @@ module GeoDiver
       def run_interaction_analysis(params, email)
         run_dir = File.join(users_dir, email, params['geo_db'],
                             params['result_id'])
-        output_file = File.join(run_dir, 
+        output_file = File.join(run_dir,
                                 "#{params[:path_id]}.gage_pathway.multi.png")
         unless File.exist? output_file
           logger.debug("Running CMD: #{interaction_cmd(run_dir, params)}")
-          Dir.chdir(run_dir) { system(interaction_cmd(run_dir, params)) } 
+          Dir.chdir(run_dir) { system(interaction_cmd(run_dir, params)) }
           remove_unwanted_files(run_dir, params)
         end
         assert_expression_output
@@ -90,9 +90,8 @@ module GeoDiver
         if File.exist? File.join(run_dir, "#{params[:path_id]}.png")
           FileUtils.rm(File.join(run_dir, "#{params[:path_id]}.png"))
         end
-        if File.exist? File.join(run_dir, "#{params[:path_id]}.xml")
-          FileUtils.rm(File.join(run_dir, "#{params[:path_id]}.xml"))
-        end
+        return unless File.exist? File.join(run_dir, "#{params[:path_id]}.xml")
+        FileUtils.rm(File.join(run_dir, "#{params[:path_id]}.xml"))
       end
 
       def generate_relative_results_link(email, geo_accession, uniq_time)

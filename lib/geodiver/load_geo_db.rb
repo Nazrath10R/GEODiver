@@ -41,7 +41,7 @@ module GeoDiver
           write_to_json(meta_data, meta_json_file)
         end
         soft_link_meta_json_to_public_dir(geo_accession, meta_json_file)
-        logger.debug("GeoDb loaded into memory")
+        logger.debug('GeoDb loaded into memory')
         meta_data
       end
 
@@ -51,7 +51,7 @@ module GeoDiver
                                         "#{geo_accession}.RData"))
         logger.debug("Running: #{load_geo_db_cmd(geo_accession)}")
         Thread.new { system(load_geo_db_cmd(geo_accession)) }
-        # TODO check exit status of the system call
+        # TODO: check exit status of the system call
       end
 
       private
@@ -140,7 +140,7 @@ module GeoDiver
         subsets.lines.each_slice(5) do |subset|
           desc = subset[2].match(/\!subset_description = (.*)/)[1]
           type = subset[4].match(/\!subset_type = (.*)/)[1].gsub(' ', '.')
-          samples = subset[3].match(/\!subset_sample_id = (.*)/)[1]
+          # samples = subset[3].match(/\!subset_sample_id = (.*)/)[1]
           results[type] ||= []
           results[type] << desc
         end
