@@ -1,0 +1,97 @@
+I: geodiver will be running again soon. talked to adrian and he will try an easy fix tomorrow, if not we might have to go back to AWS till it is sorted.
+N: I need money before we do that
+
+Paper:
+Do fixes a la conrad before he edits
+M: I will do those
+E: sure that's amazing
+A: I will help too
+M: YAy
+A: shouldn't take more than a few days
+I: done by next friday?
+A: yes
+M: agreed
+
+I: wait let's call suresh
+
+
+I: Google authentication thing; analysis without logging in is essential.
+
+
+I: author list do a voting ballot on google docs
+N: everyone gives everyone a score from 5-1
+M: like a ranking
+N: I am giving ismail 1
+A: highest scores get highter on author list
+I: what needs to be done before publishing? need to get it out before it is obsolete
+what are our github issues?
+S: ok i will open it too
+M: most important thing is that it works and you can visit the website or it is just a blank page
+N: need a 404 template
+I: and we need the google authentication thing sorted
+S: will we have our own database
+I: no point redoing the whole thing
+S: how do we do the login then?
+I: make the google authentication optional
+M: so you login to save results after the analysis
+N: make a pop-up that is annoying
+M: no it is annoying
+I: made a joke
+E: silence
+I: 404 template is a minor thing
+S: will it work by tomorrow
+I: if it is the simple issue 99.9% sure then it is a firewall issue which should be easy to solve but if not it could take a while
+M: if it is the firewall thing can we make sure it is tested by tomorrow?
+I: i will get adrian to contact tom king for us. also conrad is cced into it so they are batting for us.
+I: the other stuff is important but shouldn't take too much time
+N: what is the next biggest problem?
+I: people can select the same group for both populations
+S: i think that is important
+A: can we tag those issues seperately?
+I: I have :) Also fix google authentication
+N: I volunteer suresh for that
+S: so we don't want to allow users to upload their own datasets?
+I: that is major we have to get that done. Also the GSE doesn't work.
+M: so no work has been done since we finished project?
+N: pretty much 
+I: will need to change a bunch of the JS to allow GSE to work
+N: also something with the variables is hard coded for GDS.
+I: upload should be in the same format as GSE. soft format
+N: testing will be an issue?
+I: also the biggest issue will be people uploading data onto the server as they will be big files.
+S: don't think they will be bigger than 50MB
+I: but server might timeout if it doesn't upload in 30secs so would need to cut it up into chunks and send them seperately which sounds annoying
+N: I volunteer Ismail for this job
+I: It's a hell of a lot to do
+I: do the authentication thing first
+M: the problem is that we're already writing paper and large parts are written assuming things are done the way we think they'll look later on
+so might be an issue rewrite the whole thing when it turns out differently.
+M: meet next friday
+I: touch bases yeah. I got dumped by aliens
+N: what???? So who is doing what for next friday?
+I: I dunno how much work i can get done by then?
+M: well what are we working on?
+I: optional login
+N: what can i do?
+I: you ok working on webserver? let's have a meeting explaining the webapp
+A: yes please
+M: yeah i got a pretty sweet VM setup at home
+E: wow that is pretty amazing you lovely man
+S: swoon
+I: I have VM too look guys
+I (proceeds to fail)
+E: naww at least he tried.
+S: bzzzzzt you guys are cutting out
+I: so basically i will go through the webapp in hangouts/skype so we can all work on geodiver
+S: is it worth all of us doing it
+M: yeah i have tons of time to learn
+S: shall we divide up the work?
+I: yes once we understand the work better
+M: so between us we schedule hangouts/skype and in thsoe sessions wwe talk about who does waht agreed?
+E: yes
+M: anyone got any other points?
+I: make the google doc as a form
+N: ok
+M: AOB?
+A: no
+MEETING OVER
